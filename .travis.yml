@@ -1,0 +1,10 @@
+language: haskell
+
+notifications:
+  email: false
+
+install:
+  cabal install --only-dependencies
+
+script:
+  cabal configure && cabal build
