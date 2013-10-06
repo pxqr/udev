@@ -100,18 +100,49 @@ getHandle monitor = do
   fd <- c_getFd monitor
   fdToHandle $ Fd fd
 
-filterAddMatchSubsystemDevtype :: ()
-filterAddMatchSubsystemDevtype = undefined
+foreign import ccall unsafe "udev_monitor_filter_add_match_subsystem_devtype"
+  c_filterAddMatchSubsystemDevtype :: Monitor -> CString -> CString -> IO CInt
 
-filterAddMatchTag :: Monitor -> IO ()
-filterAddMatchTag = undefined
+-- | Filter events by subsystem and device type.
+--
+-- The filter /must be/ installed before the monitor is switched to
+-- listening mode.
+--
+filterAddMatchSubsystemDevtype :: Monitor -> ByteString -> ByteString -> IO ()
+filterAddMatchSubsystemDevtype monitor subsystem devtype = do
+  throwErrnoIfMinus1_ "filterAddMatchSubsystemDevtype" $
+    useAsCString subsystem $ \ c_subsystem ->
+      useAsCString devtype $ \ c_devtype   ->
+        c_filterAddMatchSubsystemDevtype monitor c_subsystem c_devtype
 
+foreign import ccall unsafe "udev_monitor_filter_add_match_tag"
+  c_filterAddMatchTag :: Monitor -> CString -> IO CInt
+
+-- | The filter must be installed before the monitor is switched to
+-- listening mode.
+--
+filterAddMatchTag :: Monitor -> ByteString -> IO ()
+filterAddMatchTag monitor tag = do
+  throwErrnoIfMinus1_ "filterAddMatchTag" $ do
+    useAsCString tag $ \ c_tag -> do
+      c_filterAddMatchTag monitor c_tag
+
+foreign import ccall unsafe "udev_monitor_filter_update"
+  c_filterUpdate :: Monitor -> IO CInt
+
+-- | Update the installed socket filter. This is only needed, if the
+-- filter was removed or changed.
+--
 filterUpdate :: Monitor -> IO ()
-filterUpdate = undefined
+filterUpdate monitor = do
+  throwErrnoIfMinus1_ "filterUpdate" $ do
+    c_filterUpdate monitor
 
 -- | Remove all filters from monitor.
 foreign import ccall unsafe "udev_monitor_filter_remove"
-  c_filterRemove :: Monitor -> IO ()
+  c_filterRemove :: Monitor -> IO CInt
 
 filterRemove :: Monitor -> IO ()
-filterRemove = undefined
+filterRemove monitor = do
+  throwErrnoIfMinus1_ "filterRemove" $ do
+    c_filterRemove monitor
