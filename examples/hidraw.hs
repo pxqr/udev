@@ -20,7 +20,7 @@ main = do
     path  <- getName ls
     print path
     dev <- newFromSysPath udev path
-    print =<< getDevNode dev
+    print $ getDevnode dev
     mdev <- getParentWithSubsystemDevtype dev "usb" "usb_device"
     case mdev of
       Nothing   -> BC.putStrLn "unable to find parent usb device"

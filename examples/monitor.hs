@@ -18,6 +18,7 @@ dumpDeviceInfo dev = do
   print $ getSyspath   dev
   print $ getSysname   dev
   print $ getSysnum    dev
+  print $ getDevnode    dev
   print $ getAction    dev
 
 main :: IO ()

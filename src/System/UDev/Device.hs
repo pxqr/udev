@@ -2,7 +2,7 @@ module System.UDev.Device
        ( Device (..)
        , newFromSysPath
 
-       , getDevNode
+       , getDevnode
        , getParentWithSubsystemDevtype
 
        , getSubsystem
@@ -118,11 +118,10 @@ getSysnum :: Device -> Maybe ByteString
 getSysnum dev = unsafePerformIO $ packCStringMaybe =<< c_getSysnum dev
 
 foreign import ccall unsafe "udev_device_get_devnode"
-  c_getDevNode :: Device -> IO CString
+  c_getDevnode :: Device -> IO CString
 
-getDevNode :: Device -> IO ByteString
-getDevNode udev =
-    packCString =<< throwErrnoIfNull "getDevNode" (c_getDevNode udev)
+getDevnode :: Device -> Maybe ByteString
+getDevnode udev = unsafePerformIO $ packCStringMaybe =<< c_getDevnode udev
 
 foreign import ccall unsafe "udev_device_get_action"
   c_getAction :: Device -> CString
