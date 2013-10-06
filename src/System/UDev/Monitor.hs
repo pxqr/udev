@@ -1,5 +1,11 @@
+{-# LANGUAGE OverloadedStrings #-}
 module System.UDev.Monitor
        ( Monitor
+
+       , SourceId
+       , udevId
+       , kernelId
+       , newFromNetlink
 
        , enableReceiving
        , setReceiveBufferSize
@@ -13,8 +19,10 @@ module System.UDev.Monitor
        ) where
 
 import Control.Applicative
+import Data.ByteString as BS
 import Foreign
 import Foreign.C.Error
+import Foreign.C.String
 import Foreign.C.Types
 import System.Posix.Types
 import System.Posix.IO
@@ -23,8 +31,8 @@ import System.IO
 import System.UDev.Context
 import System.UDev.Types
 
-
-newtype Monitor = Monitor (Ptr Monitor)
+-- | Opaque object handling an event source.
+newtype Monitor = Monitor { getMonitor :: Ptr Monitor }
 
 
 foreign import ccall unsafe "udev_monitor_get_udev"
@@ -42,6 +50,28 @@ foreign import ccall unsafe "udev_monitor_unref"
 instance Ref Monitor where
   ref   = c_ref
   unref = c_unref
+
+foreign import ccall unsafe "udev_monitor_new_from_netlink"
+  c_newFromNetlink :: UDev -> CString -> IO Monitor
+
+newtype SourceId = SourceId ByteString
+
+udevId :: SourceId
+udevId = SourceId "udev"
+
+kernelId :: SourceId
+kernelId = SourceId "kernel"
+
+-- | Create new udev monitor and connect to a specified event
+-- source. Valid sources identifiers are "udev" and "kernel".
+--
+newFromNetlink :: UDev -> SourceId -> IO Monitor
+newFromNetlink udev (SourceId name) =
+  Monitor <$> do
+    throwErrnoIfNull "newFromNetlink" $ do
+      useAsCString name $ \ c_name -> do
+        getMonitor <$> c_newFromNetlink udev c_name
+
 
 foreign import ccall unsafe "udev_monitor_enable_receiving"
   c_enableReceiving :: Monitor -> IO CInt
