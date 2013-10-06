@@ -11,8 +11,14 @@ import System.Posix.IO.Select
 import System.Posix.IO.Select.Types
 
 
-deviceInfo :: Device -> IO ()
-deviceInfo dev = print $ getAction dev
+dumpDeviceInfo :: Device -> IO ()
+dumpDeviceInfo dev = do
+  print $ getSubsystem dev
+  print $ getDevtype   dev
+  print $ getSyspath   dev
+  print $ getSysname   dev
+  print $ getSysnum    dev
+  print $ getAction    dev
 
 main :: IO ()
 main = do
@@ -23,8 +29,6 @@ main = do
     forever $ do
       res <- select' [fd] [] [] Never
       case res of
-        Just ([_], [], []) -> do
-          dev <- receiveDevice monitor
-          deviceInfo dev
+        Just ([_], [], []) -> dumpDeviceInfo =<< receiveDevice monitor
         Nothing -> return ()
     return ()

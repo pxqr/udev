@@ -5,6 +5,11 @@ module System.UDev.Device
        , getDevNode
        , getParentWithSubsystemDevtype
 
+       , getSubsystem
+       , getDevtype
+       , getSyspath
+       , getSysname
+       , getSysnum
        , getAction
        , getSysattrValue
        ) where
@@ -74,6 +79,43 @@ getParentWithSubsystemDevtype udev subsystem devtype = do
               useAsCString devtype $ \ c_devtype ->
                   c_getParentWithSubsystemDevtype udev c_subsystem c_devtype
   return $ if getDevice mdev == nullPtr then Nothing else Just mdev
+
+foreign import ccall unsafe "udev_device_get_subsystem"
+  c_getSubsystem :: Device -> IO CString
+
+packCStringMaybe :: CString -> IO (Maybe ByteString)
+packCStringMaybe cstring =
+  if cstring == nullPtr
+  then return Nothing
+  else Just <$> packCString cstring
+
+getSubsystem :: Device -> Maybe ByteString
+getSubsystem dev = unsafePerformIO $ packCStringMaybe =<< c_getSubsystem dev
+
+foreign import ccall unsafe "udev_device_get_devtype"
+  c_getDevtype :: Device -> IO CString
+
+getDevtype :: Device -> Maybe ByteString
+getDevtype dev = unsafePerformIO $ packCStringMaybe =<< c_getDevtype dev
+
+foreign import ccall unsafe "udev_device_get_syspath"
+  c_getSyspath :: Device -> IO CString
+
+getSyspath :: Device -> ByteString
+getSyspath dev = unsafePerformIO $ packCString =<< c_getSyspath dev
+
+foreign import ccall unsafe "udev_device_get_sysname"
+  c_getSysname :: Device -> IO CString
+
+getSysname :: Device -> ByteString
+getSysname dev = unsafePerformIO $ packCString =<< c_getSysname dev
+
+foreign import ccall unsafe "udev_device_get_sysnum"
+  c_getSysnum :: Device -> IO CString
+
+-- | TODO :: Device -> Maybe Int ?
+getSysnum :: Device -> Maybe ByteString
+getSysnum dev = unsafePerformIO $ packCStringMaybe =<< c_getSysnum dev
 
 foreign import ccall unsafe "udev_device_get_devnode"
   c_getDevNode :: Device -> IO CString
