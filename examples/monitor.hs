@@ -12,7 +12,7 @@ import System.Posix.IO.Select.Types
 
 
 deviceInfo :: Device -> IO ()
-deviceInfo dev = BC.putStrLn $ BC.concat []
+deviceInfo dev = print $ getAction dev
 
 main :: IO ()
 main = do
@@ -25,6 +25,6 @@ main = do
       case res of
         Just ([_], [], []) -> do
           dev <- receiveDevice monitor
-          return ()
+          deviceInfo dev
         Nothing -> return ()
     return ()

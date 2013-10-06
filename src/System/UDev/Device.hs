@@ -1,8 +1,11 @@
 module System.UDev.Device
        ( Device (..)
        , newFromSysPath
+
        , getDevNode
        , getParentWithSubsystemDevtype
+
+       , getAction
        , getSysattrValue
        ) where
 
@@ -78,6 +81,22 @@ getParentWithSubsystemDevtype udev subsystem devtype = do
               useAsCString devtype $ \ c_devtype ->
                   c_getParentWithSubsystemDevtype udev c_subsystem c_devtype
   return $ if getDevice mdev == nullPtr then Nothing else Just mdev
+
+foreign import ccall unsafe "udev_device_get_action"
+  c_getAction :: Device -> CString
+
+-- TODO data Action
+
+-- | This is only valid if the device was received through a
+-- monitor. Devices read from sys do not have an action string.
+--
+getAction :: Device -> Maybe ByteString
+getAction dev
+    | c_action == nullPtr = Nothing
+    |      otherwise      = Just $ unsafePerformIO $ packCString c_action
+  where
+    c_action = c_getAction dev
+
 
 foreign import ccall unsafe "udev_device_get_sysattr_value"
   c_getSysattrValue :: Device -> CString -> CString
