@@ -2,15 +2,17 @@
 module System.UDev.Monitor
        ( Monitor
 
+         -- * Creation
        , SourceId
        , udevId
        , kernelId
        , newFromNetlink
 
+         -- * Receiving
        , enableReceiving
        , setReceiveBufferSize
-       , getHandle
        , getFd
+       , getHandle
        , receiveDevice
 
          -- * Filter
