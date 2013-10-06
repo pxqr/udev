@@ -10,6 +10,7 @@ module System.UDev.Monitor
        , enableReceiving
        , setReceiveBufferSize
        , getHandle
+       , getFd
        , receiveDevice
 
          -- * Filter
@@ -20,6 +21,7 @@ module System.UDev.Monitor
        ) where
 
 import Control.Applicative
+import Control.Monad
 import Data.ByteString as BS
 import Foreign
 import Foreign.C.Error
@@ -96,11 +98,12 @@ setReceiveBufferSize monitor size = do
 foreign import ccall unsafe "udev_monitor_get_fd"
   c_getFd :: Monitor -> IO CInt
 
+getFd :: Monitor -> IO Fd
+getFd monitor = Fd <$> c_getFd monitor
+
 -- | Retrieve the socket file descriptor associated with the monitor.
 getHandle :: Monitor -> IO Handle
-getHandle monitor = do
-  fd <- c_getFd monitor
-  fdToHandle $ Fd fd
+getHandle = getFd >=> fdToHandle
 
 foreign import ccall unsafe "udev_monitor_receive_device"
   c_receiveDevice :: Monitor -> IO Device
