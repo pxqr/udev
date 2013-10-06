@@ -10,6 +10,7 @@ module System.UDev.Monitor
        , enableReceiving
        , setReceiveBufferSize
        , getHandle
+       , receiveDevice
 
          -- * Filter
        , filterAddMatchSubsystemDevtype
@@ -29,6 +30,7 @@ import System.Posix.IO
 import System.IO
 
 import System.UDev.Context
+import System.UDev.Device
 import System.UDev.Types
 
 -- | Opaque object handling an event source.
@@ -99,6 +101,18 @@ getHandle :: Monitor -> IO Handle
 getHandle monitor = do
   fd <- c_getFd monitor
   fdToHandle $ Fd fd
+
+foreign import ccall unsafe "udev_monitor_receive_device"
+  c_receiveDevice :: Monitor -> IO Device
+
+-- | Receive data from the udev monitor socket, allocate a new udev
+-- device, fill in the received data, and return the device.
+--
+receiveDevice :: Monitor -> IO Device
+receiveDevice monitor = do
+  Device <$> do
+    throwErrnoIfNull "receiveDevice" $ do
+      getDevice <$> c_receiveDevice monitor
 
 foreign import ccall unsafe "udev_monitor_filter_add_match_subsystem_devtype"
   c_filterAddMatchSubsystemDevtype :: Monitor -> CString -> CString -> IO CInt

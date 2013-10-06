@@ -1,5 +1,5 @@
 module System.UDev.Device
-       ( Device
+       ( Device (..)
        , newFromSysPath
        , getDevNode
        , getParentWithSubsystemDevtype
