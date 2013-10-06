@@ -33,7 +33,8 @@ library
   default-language:    Haskell2010
   default-extensions:
   hs-source-dirs:      src
-  exposed-modules:     System.UDev.Context
+  exposed-modules:     System.UDev
+                     , System.UDev.Context
                      , System.UDev.List
                      , System.UDev.Enumerate
                      , System.UDev.Monitor
