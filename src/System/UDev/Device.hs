@@ -59,13 +59,6 @@ newFromSysPath udev sysPath = do
 
 -- TODO rest
 
-foreign import ccall unsafe "udev_device_get_devnode"
-  c_getDevNode :: Device -> IO CString
-
-getDevNode :: Device -> IO ByteString
-getDevNode udev =
-    packCString =<< throwErrnoIfNull "getDevNode" (c_getDevNode udev)
-
 foreign import ccall unsafe "udev_device_get_parent_with_subsystem_devtype"
     c_getParentWithSubsystemDevtype :: Device -> CString -> CString
                                     -> IO Device
@@ -81,6 +74,13 @@ getParentWithSubsystemDevtype udev subsystem devtype = do
               useAsCString devtype $ \ c_devtype ->
                   c_getParentWithSubsystemDevtype udev c_subsystem c_devtype
   return $ if getDevice mdev == nullPtr then Nothing else Just mdev
+
+foreign import ccall unsafe "udev_device_get_devnode"
+  c_getDevNode :: Device -> IO CString
+
+getDevNode :: Device -> IO ByteString
+getDevNode udev =
+    packCString =<< throwErrnoIfNull "getDevNode" (c_getDevNode udev)
 
 foreign import ccall unsafe "udev_device_get_action"
   c_getAction :: Device -> CString
