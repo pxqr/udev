@@ -37,6 +37,7 @@ library
                      , System.UDev.Context
                      , System.UDev.List
                      , System.UDev.Enumerate
+                     , System.UDev.HWDB
                      , System.UDev.Monitor
                      , System.UDev.Device
                      , System.UDev.Queue
