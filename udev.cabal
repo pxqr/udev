@@ -35,11 +35,11 @@ library
   hs-source-dirs:      src
   exposed-modules:     System.UDev
                      , System.UDev.Context
-                     , System.UDev.List
+                     , System.UDev.Device
                      , System.UDev.Enumerate
                      , System.UDev.HWDB
+                     , System.UDev.List
                      , System.UDev.Monitor
-                     , System.UDev.Device
                      , System.UDev.Queue
                      , System.UDev.Types
   -- other-modules:
