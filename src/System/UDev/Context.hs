@@ -27,7 +27,6 @@ import Control.Applicative
 import Control.Exception
 import Data.ByteString as BS
 import Foreign
-import Foreign.C.Error
 import Foreign.C.String
 import Foreign.C.Types
 
