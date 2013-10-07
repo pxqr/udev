@@ -9,8 +9,9 @@
 --   file, and is passed to all library operations.
 --
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE OverloadedStrings        #-}
 module System.UDev.Context
-       ( -- * udev context
+       ( -- * Context
          UDev (..)
        , UDevChild (..)
        , newUDev
@@ -21,6 +22,7 @@ module System.UDev.Context
        , getLogPriority
        , setLogPriority
        , setLogger
+       , defaultLogger
 
          -- * User data
        , getUserdata
@@ -30,6 +32,7 @@ module System.UDev.Context
 import Control.Applicative
 import Control.Exception
 import Data.ByteString as BS
+import Data.ByteString.Char8 as BC
 import Foreign
 import Foreign.C.String
 import Foreign.C.Types
@@ -130,6 +133,17 @@ foreign import ccall "udev_set_log_fn"
 -- functionality.
 setLogger :: UDev -> Logger -> IO ()
 setLogger udev logger = c_setLogger udev =<< mkLogger (marshLogger logger)
+
+
+defaultLogger :: UDev -> Priority   -> ByteString
+              -> Int  -> ByteString -> ByteString
+              -> IO ()
+defaultLogger _ priority file line fn format = do
+  BC.putStrLn $ BS.concat
+    [ BC.pack (show priority), " "
+    , file, ":", BC.pack (show line), ":", fn, ": "
+    , format
+    ]
 
 {-----------------------------------------------------------------------
 --  Userdata

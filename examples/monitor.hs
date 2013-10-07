@@ -24,12 +24,16 @@ dumpDeviceInfo dev = do
 main :: IO ()
 main = do
   withUDev $ \ udev -> do
+    setLogPriority udev LogDebug
+    setLogger udev defaultLogger
     monitor <- newFromNetlink udev udevId
     enableReceiving monitor
     fd <- getFd monitor
     forever $ do
       res <- select' [fd] [] [] Never
       case res of
-        Just ([_], [], []) -> dumpDeviceInfo =<< receiveDevice monitor
+        Just ([_], [], []) -> do
+          dev <- receiveDevice monitor
+          dumpDeviceInfo dev
         Nothing -> return ()
     return ()
