@@ -1,3 +1,12 @@
+-- |
+--   Copyright   :  (c) Sam Truzjan 2013
+--   License     :  BSD3
+--   Maintainer  :  pxqr.sta@gmail.com
+--   Stability   :  experimental
+--   Portability :  portable
+--
+--   Connects to a device event source.
+--
 {-# LANGUAGE OverloadedStrings #-}
 module System.UDev.Monitor
        ( Monitor
@@ -62,15 +71,15 @@ foreign import ccall unsafe "udev_monitor_new_from_netlink"
 
 newtype SourceId = SourceId ByteString
 
+-- | Events are sent out after udev has finished its event processing,
+-- all rules have been processed, and needed device nodes are created.
 udevId :: SourceId
 udevId = SourceId "udev"
 
 kernelId :: SourceId
 kernelId = SourceId "kernel"
 
--- | Create new udev monitor and connect to a specified event
--- source. Valid sources identifiers are "udev" and "kernel".
---
+-- | Create new udev monitor and connect to a specified event source.
 newFromNetlink :: UDev -> SourceId -> IO Monitor
 newFromNetlink udev (SourceId name) =
   Monitor <$> do
@@ -100,10 +109,11 @@ setReceiveBufferSize monitor size = do
 foreign import ccall unsafe "udev_monitor_get_fd"
   c_getFd :: Monitor -> IO CInt
 
+-- | Retrieve the socket file descriptor associated with the monitor.
 getFd :: Monitor -> IO Fd
 getFd monitor = Fd <$> c_getFd monitor
 
--- | Retrieve the socket file descriptor associated with the monitor.
+-- | Retrieve the socket handle associated with the monitor.
 getHandle :: Monitor -> IO Handle
 getHandle = getFd >=> fdToHandle
 
@@ -157,10 +167,11 @@ filterUpdate monitor = do
   throwErrnoIfMinus1_ "filterUpdate" $ do
     c_filterUpdate monitor
 
--- | Remove all filters from monitor.
+
 foreign import ccall unsafe "udev_monitor_filter_remove"
   c_filterRemove :: Monitor -> IO CInt
 
+-- | Remove all filters from monitor.
 filterRemove :: Monitor -> IO ()
 filterRemove monitor = do
   throwErrnoIfMinus1_ "filterRemove" $ do
