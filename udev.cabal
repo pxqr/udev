@@ -39,6 +39,7 @@ library
                      , System.UDev.Enumerate
                      , System.UDev.Monitor
                      , System.UDev.Device
+                     , System.UDev.Queue
                      , System.UDev.Types
   -- other-modules:
   pkgconfig-depends:   libudev
