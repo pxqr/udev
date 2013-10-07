@@ -17,6 +17,7 @@ module System.UDev.Context
        , withUDev
 
          -- * Logging
+       , Priority (..)
        , getLogPriority
        , setLogPriority
        , setLogger
@@ -68,26 +69,42 @@ withUDev = bracket c_new c_unref
 --  Logging
 -----------------------------------------------------------------------}
 
--- TODO data Priority
+data Priority = LogError -- ^ error conditions
+              | LogInfo  -- ^ informational
+              | LogDebug -- ^ debug-level messages
+                deriving (Show, Read, Eq, Ord, Enum, Bounded)
+
+prioToNr :: Priority -> CInt
+prioToNr LogError = 3
+prioToNr LogInfo  = 6
+prioToNr LogDebug = 7
+
+nrToPrio :: CInt -> IO Priority
+nrToPrio 3 = pure LogError
+nrToPrio 6 = pure LogInfo
+nrToPrio 7 = pure LogDebug
+nrToPrio n = throwIO $ PatternMatchFail msg
+  where
+    msg = "unknown priority number: " ++ show n
 
 foreign import ccall unsafe "udev_get_log_priority"
   c_getLogPriority :: UDev -> IO CInt
 
 -- | The initial logging priority is read from the udev config file at
 -- startup.
-getLogPriority :: UDev -> IO Int
-getLogPriority udev = fromIntegral <$> c_getLogPriority udev
+getLogPriority :: UDev -> IO Priority
+getLogPriority udev = nrToPrio =<< c_getLogPriority udev
 
 foreign import ccall unsafe "udev_set_log_priority"
   c_setLogPriority :: UDev -> CInt -> IO ()
 
 -- | Set the current logging priority. The value controls which
 -- messages are logged.
-setLogPriority :: UDev -> Int -> IO ()
-setLogPriority udev prio = c_setLogPriority udev (fromIntegral prio)
+setLogPriority :: UDev -> Priority -> IO ()
+setLogPriority udev prio = c_setLogPriority udev (prioToNr prio)
 
 type CLogger = UDev -> CInt -> CString -> CInt -> CString -> CString -> IO ()
-type Logger  = UDev -> Int -> ByteString -> Int -> ByteString -> ByteString
+type Logger  = UDev -> Priority -> ByteString -> Int -> ByteString -> ByteString
             -> IO ()
 
 marshLogger :: Logger -> CLogger
@@ -95,7 +112,8 @@ marshLogger logger udev c_priority c_file c_line c_fn c_format = do
   file   <- packCString c_file
   fn     <- packCString c_fn
   format <- packCString c_format
-  logger udev (fromIntegral c_priority) file (fromIntegral c_line) fn format
+  prio   <- nrToPrio    c_priority
+  logger udev prio file (fromIntegral c_line) fn format
 
 foreign import ccall "wrapper"
   mkLogger :: CLogger -> IO (FunPtr CLogger)
