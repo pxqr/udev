@@ -42,6 +42,7 @@ library
                      , System.UDev.Monitor
                      , System.UDev.Queue
                      , System.UDev.Types
+                     , System.UDev.Util
   -- other-modules:
   pkgconfig-depends:   libudev
   build-depends:       base == 4.*
