@@ -10,9 +10,9 @@
 --
 {-# LANGUAGE ForeignFunctionInterface #-}
 module System.UDev.Context
-       ( UDev (..)
+       ( -- * udev context
+         UDev (..)
        , UDevChild (..)
-
        , newUDev
        , withUDev
 
@@ -21,6 +21,10 @@ module System.UDev.Context
        , getLogPriority
        , setLogPriority
        , setLogger
+
+         -- * User data
+       , getUserdata
+       , setUserdata
        ) where
 
 import Control.Applicative
@@ -29,6 +33,7 @@ import Data.ByteString as BS
 import Foreign
 import Foreign.C.String
 import Foreign.C.Types
+import Unsafe.Coerce
 
 import System.UDev.Types
 
@@ -125,3 +130,23 @@ foreign import ccall "udev_set_log_fn"
 -- functionality.
 setLogger :: UDev -> Logger -> IO ()
 setLogger udev logger = c_setLogger udev =<< mkLogger (marshLogger logger)
+
+{-----------------------------------------------------------------------
+--  Userdata
+-----------------------------------------------------------------------}
+
+foreign import ccall unsafe "udev_get_userdata"
+  c_getUserdata :: UDev -> IO (Ptr ())
+
+-- | Retrieve stored data pointer from library context. This might be
+-- useful to access from callbacks like a custom logging function.
+--
+getUserdata :: UDev -> IO a
+getUserdata udev = unsafeCoerce <$> c_getUserdata udev
+
+foreign import ccall unsafe "udev_set_userdata"
+  c_setUserdata :: UDev -> Ptr () -> IO ()
+
+-- | Store custom userdata in the library context.
+setUserdata :: UDev -> a -> IO ()
+setUserdata udev ud = c_setUserdata udev (unsafeCoerce ud)
