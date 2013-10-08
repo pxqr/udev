@@ -12,6 +12,7 @@
 --
 module System.UDev.Device
        ( Device (..)
+       , Devnum
 
          -- * Create
        , newFromSysPath
@@ -182,6 +183,10 @@ foreign import ccall unsafe "udev_device_get_devpath"
   c_getDevpath :: Device -> IO CString
 
 -- TODO use RawFilePath
+
+-- | Retrieve the kernel devpath value of the udev device. The path
+-- does not contain the sys mount point, and starts with a '/'.
+--
 getDevpath :: Device -> IO ByteString
 getDevpath dev = packCString =<< c_getDevpath dev
 
@@ -194,24 +199,32 @@ packCStringMaybe cstring =
   then return Nothing
   else Just <$> packCString cstring
 
+-- | Retrieve the subsystem string of the udev device. The string does
+-- not contain any "/".
+--
 getSubsystem :: Device -> Maybe ByteString
 getSubsystem dev = unsafePerformIO $ packCStringMaybe =<< c_getSubsystem dev
 
 foreign import ccall unsafe "udev_device_get_devtype"
   c_getDevtype :: Device -> IO CString
 
+-- | Retrieve the devtype string of the udev device.
 getDevtype :: Device -> Maybe ByteString
 getDevtype dev = unsafePerformIO $ packCStringMaybe =<< c_getDevtype dev
 
 foreign import ccall unsafe "udev_device_get_syspath"
   c_getSyspath :: Device -> IO CString
 
+-- | Retrieve the sys path of the udev device. The path is an absolute
+-- path and starts with the sys mount point.
+--
 getSyspath :: Device -> ByteString
 getSyspath dev = unsafePerformIO $ packCString =<< c_getSyspath dev
 
 foreign import ccall unsafe "udev_device_get_sysname"
   c_getSysname :: Device -> IO CString
 
+-- | Get the kernel device name in /sys.
 getSysname :: Device -> ByteString
 getSysname dev = unsafePerformIO $ packCString =<< c_getSysname dev
 
@@ -219,12 +232,18 @@ foreign import ccall unsafe "udev_device_get_sysnum"
   c_getSysnum :: Device -> IO CString
 
 -- | TODO :: Device -> Maybe Int ?
+
+-- | Get the instance number of the device.
 getSysnum :: Device -> Maybe ByteString
 getSysnum dev = unsafePerformIO $ packCStringMaybe =<< c_getSysnum dev
 
 foreign import ccall unsafe "udev_device_get_devnode"
   c_getDevnode :: Device -> IO CString
 
+-- | Retrieve the device node file name belonging to the udev
+-- device. The path is an absolute path, and starts with the device
+-- directory.
+--
 getDevnode :: Device -> Maybe ByteString
 getDevnode udev = unsafePerformIO $ packCStringMaybe =<< c_getDevnode udev
 
