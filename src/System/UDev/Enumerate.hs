@@ -98,12 +98,15 @@ foreign import ccall unsafe "udev_enumerate_add_match_sysattr"
   c_addMatchSysattr :: Enumerate -> CString -> CString -> IO CInt
 
 -- | Match only devices with a certain \/sys device attribute.
-addMatchSysattr :: Enumerate -> SysAttr -> SysValue -> IO ()
-addMatchSysattr enumerate sysAttr sysVal = do
-  throwErrnoIfMinus1_ "addMatchSysattr" $ do
-    useAsCString sysAttr $ \ cSysAttr ->
-      useAsCString sysVal $ \ cSysVal ->
-        c_addMatchSysattr enumerate cSysAttr cSysVal
+addMatchSysattr :: Enumerate -> SysAttr -> Maybe SysValue -> IO ()
+addMatchSysattr enumerate sysattr mvalue = do
+  throwErrnoIf_ (< 0) "addMatchSysattr" $  do
+    useAsCString sysattr $ \ c_sysattr ->  do
+      case mvalue of
+        Nothing    -> c_addMatchSysattr enumerate c_sysattr nullPtr
+        Just value -> do
+          useAsCString value $ \ c_value -> do
+            c_addMatchSysattr enumerate c_sysattr c_value
 
 foreign import ccall unsafe  "udev_enumerate_add_nomatch_sysattr"
   c_addNoMatchSysattr :: Enumerate -> CString -> CString -> IO CInt
