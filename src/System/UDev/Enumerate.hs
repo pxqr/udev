@@ -1,3 +1,13 @@
+-- |
+--   Copyright   :  (c) Sam Truzjan 2013
+--   License     :  BSD3
+--   Maintainer  :  pxqr.sta@gmail.com
+--   Stability   :  stable
+--   Portability :  portable
+--
+--   Lookup devices in the sys filesystem, filter devices by
+--   properties, and return a sorted list of devices.
+--
 {-# LANGUAGE ForeignFunctionInterface #-}
 module System.UDev.Enumerate
        ( Enumerate
@@ -8,8 +18,10 @@ module System.UDev.Enumerate
        , addMatchSubsystem
        , addNoMatchSubsystem
        , addMatchSysattr
+         -- TODO
        , addMatchIsInitialized
        , addMatchSysname
+         -- TODO
 
          -- * Scan
        , scanDevices
@@ -29,11 +41,8 @@ import System.UDev.Context
 import System.UDev.List
 import System.UDev.Types
 
-
+-- | Opaque object representing one device lookup/sort context.
 newtype Enumerate = Enumerate (Ptr Enumerate)
-
-foreign import ccall unsafe "udev_enumerate_new"
-  newEnumerate :: UDev -> IO Enumerate
 
 foreign import ccall unsafe "udev_enumerate_ref"
   c_ref :: Enumerate -> IO Enumerate
@@ -45,14 +54,22 @@ instance Ref Enumerate where
   ref   = c_ref
   unref = c_unref
 
+foreign import ccall unsafe "udev_enumerate_get_udev"
+  c_getUDev :: Enumerate -> UDev
+
+instance UDevChild Enumerate where
+  getUDev = c_getUDev
+
+foreign import ccall unsafe "udev_enumerate_new"
+  c_new :: UDev -> IO Enumerate
+
+-- | Create an enumeration context to scan /sys.
+newEnumerate :: UDev -> IO Enumerate
+newEnumerate = c_new
+{-# INLINE newEnumerate #-}
+
 foreign import ccall unsafe "udev_enumerate_add_match_subsystem"
   c_addMatchSubsystem :: Enumerate -> CString -> IO CInt
-
-foreign import ccall unsafe "udev_enumerate_add_nomatch_subsystem"
-  c_addNoMatchSubsystem :: Enumerate -> CString -> IO CInt
-
-foreign import ccall unsafe "udev_enumerate_add_match_sysattr"
-  c_addMatchSysattr :: Enumerate -> CString -> CString -> IO CInt
 
 type Subsystem = ByteString
 
@@ -63,6 +80,9 @@ addMatchSubsystem enumerate subsystem = do
     useAsCString subsystem $
       c_addMatchSubsystem enumerate
 
+foreign import ccall unsafe "udev_enumerate_add_nomatch_subsystem"
+  c_addNoMatchSubsystem :: Enumerate -> CString -> IO CInt
+
 -- | Match only devices not belonging to a certain kernel subsystem.
 addNoMatchSubsystem :: Enumerate -> Subsystem -> IO ()
 addNoMatchSubsystem enumerate subsystem = do
@@ -72,6 +92,9 @@ addNoMatchSubsystem enumerate subsystem = do
 
 type SysAttr  = ByteString
 type SysValue = ByteString
+
+foreign import ccall unsafe "udev_enumerate_add_match_sysattr"
+  c_addMatchSysattr :: Enumerate -> CString -> CString -> IO CInt
 
 -- | Match only devices with a certain \/sys device attribute.
 addMatchSysattr :: Enumerate -> SysAttr -> SysValue -> IO ()
@@ -115,4 +138,9 @@ scanSubsystems :: Enumerate -> IO ()
 scanSubsystems = throwErrnoIfMinus1_ "scanSubsystems" . c_scanSubsystems
 
 foreign import ccall unsafe "udev_enumerate_get_list_entry"
-  getListEntry :: Enumerate -> IO List
+  c_getListEntry :: Enumerate -> IO List
+
+-- | Get the first entry of the sorted list of device paths.
+getListEntry :: Enumerate -> IO List
+getListEntry = c_getListEntry
+{-# INLINE getListEntry #-}
