@@ -35,9 +35,20 @@ module System.UDev.Device
        , getDevlinksListEntry
        , getPropertiesListEntry
        , getTagsListEntry
+       , getPropertyValue
+       , getDriver
        , getDevnum
        , getAction
+
+         -- * Sysattrs
        , getSysattrValue
+       , setSysattrValue
+       , getSysattrListEntry
+
+         -- * Misc
+       , getSeqnum
+       , getUsecSinceInitialized
+       , hasTag
        ) where
 
 import Control.Applicative
@@ -268,11 +279,31 @@ getTagsListEntry :: Device -> IO List
 getTagsListEntry = c_getTagsListEntry
 {-# INLINE getTagsListEntry #-}
 
+foreign import ccall unsafe "udev_device_get_property_value"
+  c_getPropertyValue :: Device -> CString -> IO CString
+
+-- | Get the value of a given property.
+getPropertyValue :: Device -> ByteString -> IO (Maybe ByteString)
+getPropertyValue dev prop = do
+  res <- useAsCString prop $ \ c_prop ->
+    c_getPropertyValue dev c_prop
+  if res == nullPtr then return Nothing else Just <$> packCString res
+
+foreign import ccall unsafe "udev_device_get_driver"
+  c_getDriver :: Device -> IO CString
+
+-- TODO ByteString -> Text ?
+
+-- | Get the kernel driver name.
+getDriver :: Device -> IO ByteString
+getDriver dev = packCString =<< c_getDriver dev
+
 foreign import ccall unsafe "udev_device_get_devnum"
   c_getDevnum :: Device -> IO Devnum
 
 getDevnum :: Device -> IO Devnum
 getDevnum = c_getDevnum
+{-# INLINE getDevnum #-}
 
 foreign import ccall unsafe "udev_device_get_action"
   c_getAction :: Device -> CString
@@ -300,3 +331,68 @@ getSysattrValue :: Device -> ByteString -> ByteString
 getSysattrValue dev sysattr = do
   unsafePerformIO $ do
     packCString =<< useAsCString sysattr (return . c_getSysattrValue dev)
+
+foreign import ccall unsafe "udev_device_set_sysattr_value"
+  c_setSysattrValue :: Device -> CString -> CString -> IO CInt
+
+-- | Update the contents of the sys attribute and the cached value of
+-- the device.
+--
+setSysattrValue :: Device
+                -> ByteString -- ^ attribute name
+                -> ByteString -- ^ new value to be set
+                -> IO ()
+setSysattrValue dev sysattr value = do
+  throwErrnoIf_ (0 <) "setSysattrValue" $ do
+    useAsCString sysattr $ \ c_sysattr ->
+      useAsCString value $ \ c_value   ->
+        c_setSysattrValue dev c_sysattr c_value
+
+foreign import ccall unsafe "udev_device_get_sysattr_list_entry"
+  c_getSysAttrListEntry :: Device -> IO List
+
+-- | Retrieve the list of available sysattrs, with value being empty;
+-- This just return all available sysfs attributes for a particular
+-- device without reading their values.
+--
+getSysattrListEntry :: Device -> IO List
+getSysattrListEntry = c_getSysAttrListEntry
+{-# INLINE getSysattrListEntry #-}
+
+toMaybe :: CULLong -> Maybe Int
+toMaybe 0 = Nothing
+toMaybe n = Just (fromIntegral n)
+{-# INLINE toMaybe #-}
+
+foreign import ccall unsafe "udev_device_get_seqnum"
+  c_getSeqnum :: Device -> IO CULLong
+
+-- | This is only valid if the device was received through a
+-- monitor. Devices read from sys do not have a sequence number.
+--
+getSeqnum :: Device -> IO (Maybe Int)
+getSeqnum dev = toMaybe <$> c_getSeqnum dev
+{-# INLINE getSeqnum #-}
+
+foreign import ccall unsafe "udev_device_get_usec_since_initialized"
+  c_getUsecSinceInitialized :: Device -> IO CULLong
+
+-- | Return the number of microseconds passed since udev set up the
+-- device for the first time.
+--
+--   This is only implemented for devices with need to store
+--   properties in the udev database. All other devices return
+--   'Nothing' here.
+--
+getUsecSinceInitialized :: Device -> IO (Maybe Int)
+getUsecSinceInitialized dev = toMaybe <$> c_getUsecSinceInitialized dev
+
+foreign import ccall unsafe "udev_device_has_tag"
+  c_hasTag :: Device -> CString -> IO CInt
+
+-- | Check if a given device has a certain tag associated.
+hasTag :: Device -> ByteString -> IO Bool
+hasTag dev tag = do
+  (1 ==) <$> do
+    useAsCString tag $ \ c_tag ->
+      c_hasTag dev c_tag
