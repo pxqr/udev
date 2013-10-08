@@ -12,16 +12,24 @@
 --
 module System.UDev.Device
        ( Device (..)
-       , newFromSysPath
 
-       , getDevnode
+         -- * Create
+       , newFromSysPath
+       , newFromDevnum
+       , newFromSubsystemSysname
+       , newFromEnvironment
+
+       , getParent
        , getParentWithSubsystemDevtype
 
+         -- * Query
+       , getDevnode
        , getSubsystem
        , getDevtype
        , getSyspath
        , getSysname
        , getSysnum
+       , getDevnum
        , getAction
        , getSysattrValue
        ) where
@@ -72,8 +80,57 @@ newFromSysPath udev sysPath = do
     useAsCString sysPath $ \ c_sysPath -> do
       getDevice <$> c_newFromSysPath udev c_sysPath)
 
+type Dev_t = CULong
 
--- TODO rest
+foreign import ccall unsafe "udev_device_new_from_devnum"
+  c_newFromDevnum :: UDev -> CChar -> Dev_t -> IO Device
+
+type Devnum = Int
+
+-- | Create new udev device, and fill in information from the sys
+-- device and the udev database entry. The device is looked-up by its
+-- major/minor number and type. Character and block device numbers are
+-- not unique across the two types.
+--
+newFromDevnum :: UDev -> Char -> Devnum -> IO Device
+newFromDevnum udev char devnum
+  = c_newFromDevnum udev (toEnum (fromEnum char)) (fromIntegral devnum)
+{-# INLINE newFromDevnum #-}
+
+foreign import ccall unsafe "udev_device_new_from_subsystem_sysname"
+  c_newFromSubsystemSysname :: UDev -> CString -> CString -> IO Device
+
+-- | The device is looked up by the subsystem and name string of the
+-- device, like "mem" / "zero", or "block" / "sda".
+--
+newFromSubsystemSysname :: UDev -> ByteString -> ByteString -> IO Device
+newFromSubsystemSysname udev subsystem sysname = do
+  useAsCString subsystem $ \ c_subsystem ->
+    useAsCString sysname $ \ c_sysname   ->
+      c_newFromSubsystemSysname udev c_subsystem c_sysname
+
+foreign import ccall unsafe "udev_new_from_environment"
+  c_newFromEnvironment :: UDev -> IO Device
+
+-- | Create new udev device, and fill in information from the current
+-- process environment. This only works reliable if the process is
+-- called from a udev rule. It is usually used for tools executed from
+-- IMPORT= rules.
+--
+newFromEnvironment :: UDev -> IO Device
+newFromEnvironment = c_newFromEnvironment
+
+foreign import ccall unsafe "udev_device_get_parent"
+  c_getParent :: Device -> IO Device
+
+-- | TODO: [MEM]: The returned the device is not referenced. It is
+-- attached to the child device, and will be cleaned up when the child
+-- device is cleaned up.
+
+-- | Find the next parent device, and fill in information from the sys
+-- device and the udev database entry.
+getParent :: Device -> IO Device
+getParent = c_getParent
 
 foreign import ccall unsafe "udev_device_get_parent_with_subsystem_devtype"
     c_getParentWithSubsystemDevtype :: Device -> CString -> CString
@@ -133,6 +190,12 @@ foreign import ccall unsafe "udev_device_get_devnode"
 
 getDevnode :: Device -> Maybe ByteString
 getDevnode udev = unsafePerformIO $ packCStringMaybe =<< c_getDevnode udev
+
+foreign import ccall unsafe "udev_device_get_devnum"
+  c_getDevnum :: Device -> IO Devnum
+
+getDevnum :: Device -> IO Devnum
+getDevnum = c_getDevnum
 
 foreign import ccall unsafe "udev_device_get_action"
   c_getAction :: Device -> CString
