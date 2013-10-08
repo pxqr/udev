@@ -18,6 +18,7 @@ module System.UDev.Enumerate
        , addMatchSubsystem
        , addNoMatchSubsystem
        , addMatchSysattr
+       , addNoMatchSysattr
          -- TODO
        , addMatchIsInitialized
        , addMatchSysname
@@ -103,6 +104,25 @@ addMatchSysattr enumerate sysAttr sysVal = do
     useAsCString sysAttr $ \ cSysAttr ->
       useAsCString sysVal $ \ cSysVal ->
         c_addMatchSysattr enumerate cSysAttr cSysVal
+
+foreign import ccall unsafe  "udev_enumerate_add_nomatch_sysattr"
+  c_addNoMatchSysattr :: Enumerate -> CString -> CString -> IO CInt
+
+-- | Match only devices not having a certain /sys device attribute.
+addNoMatchSysattr :: Enumerate
+                  -> ByteString -- ^ filter for a sys attribute at the
+                                -- device to exclude from the list
+                  -> Maybe ByteString -- ^ optional value of the sys
+                                      -- attribute
+                  -> IO ()
+addNoMatchSysattr enumerate sysattr mvalue = do
+  throwErrnoIf_ (< 0) "addNoMatchSysattr" $  do
+    useAsCString sysattr $ \ c_sysattr ->    do
+      case mvalue of
+        Nothing    -> c_addNoMatchSysattr enumerate c_sysattr nullPtr
+        Just value -> do
+          useAsCString value $ \ c_value -> do
+            c_addNoMatchSysattr enumerate c_sysattr c_value
 
 foreign import ccall unsafe "udev_enumerate_add_match_is_initialized"
   c_addMatchIsInitialized :: Enumerate -> IO CInt
