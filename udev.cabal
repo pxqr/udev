@@ -45,9 +45,8 @@ library
                      , System.UDev.List
                      , System.UDev.Monitor
                      , System.UDev.Queue
-                     , System.UDev.Types
                      , System.UDev.Util
-  -- other-modules:
+  other-modules:       System.UDev.Types
   pkgconfig-depends:   libudev
   build-depends:       base == 4.*
                      , bytestring
