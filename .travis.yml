@@ -4,7 +4,7 @@ notifications:
   email: false
 
 install:
-  - sudo apt-get install libudev
+  - sudo apt-get install libudev-dev
   - cabal install --only-dependencies
 
 script:
