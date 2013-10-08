@@ -6,6 +6,10 @@ module System.UDev.Enumerate
 
          -- * Match
        , addMatchSubsystem
+       , addNoMatchSubsystem
+       , addMatchSysattr
+       , addMatchIsInitialized
+       , addMatchSysname
 
          -- * Scan
        , scanDevices
@@ -23,6 +27,7 @@ import Foreign.C.Types
 
 import System.UDev.Context
 import System.UDev.List
+import System.UDev.Types
 
 
 newtype Enumerate = Enumerate (Ptr Enumerate)
@@ -30,9 +35,15 @@ newtype Enumerate = Enumerate (Ptr Enumerate)
 foreign import ccall unsafe "udev_enumerate_new"
   newEnumerate :: UDev -> IO Enumerate
 
-foreign import ccall unsafe "udev_enumerate_unref"
-  unrefEnumerate :: Enumerate -> IO Enumerate
+foreign import ccall unsafe "udev_enumerate_ref"
+  c_ref :: Enumerate -> IO Enumerate
 
+foreign import ccall unsafe "udev_enumerate_unref"
+  c_unref :: Enumerate -> IO Enumerate
+
+instance Ref Enumerate where
+  ref   = c_ref
+  unref = c_unref
 
 foreign import ccall unsafe "udev_enumerate_add_match_subsystem"
   c_addMatchSubsystem :: Enumerate -> CString -> IO CInt

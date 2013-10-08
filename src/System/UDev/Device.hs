@@ -1,3 +1,15 @@
+-- |
+--   Copyright   :  (c) Sam Truzjan 2013
+--   License     :  BSD3
+--   Maintainer  :  pxqr.sta@gmail.com
+--   Stability   :  stable
+--   Portability :  portable
+--
+-- Representation of kernel sys devices. Devices are uniquely
+-- identified by their syspath, every device has exactly one path in
+-- the kernel sys filesystem. Devices usually belong to a kernel
+-- subsystem, and have a unique name inside that subsystem.
+--
 module System.UDev.Device
        ( Device (..)
        , newFromSysPath
@@ -41,9 +53,8 @@ instance Ref Device where
 foreign import ccall unsafe "udev_device_get_udev"
   c_getUDev :: Device -> UDev
 
--- TODO
---instance UDevChild Device where
---  getUDev = c_getUDev
+instance UDevChild Device where
+  getUDev = c_getUDev
 
 foreign import ccall unsafe "udev_device_new_from_syspath"
   c_newFromSysPath :: UDev -> CString -> IO Device

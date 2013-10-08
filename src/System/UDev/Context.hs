@@ -12,7 +12,7 @@
 {-# LANGUAGE OverloadedStrings        #-}
 module System.UDev.Context
        ( -- * Context
-         UDev (..)
+         UDev (..) -- TODO hide constructor from API
        , UDevChild (..)
        , newUDev
        , withUDev
