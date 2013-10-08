@@ -17,6 +17,7 @@ module System.UDev.Device
        , newFromSysPath
        , newFromDevnum
        , newFromSubsystemSysname
+       , newFromDeviceId
        , newFromEnvironment
 
        , getParent
@@ -109,7 +110,19 @@ newFromSubsystemSysname udev subsystem sysname = do
     useAsCString sysname $ \ c_sysname   ->
       c_newFromSubsystemSysname udev c_subsystem c_sysname
 
-foreign import ccall unsafe "udev_new_from_environment"
+foreign import ccall unsafe "udev_device_new_from_device_id"
+  c_newFromDeviceId :: UDev -> CString -> IO Device
+
+-- | The device is looked-up by a special string: b8:2 - block device
+-- major:minor c128:1 - char device major:minor n3 - network device
+-- ifindex +sound:card29 - kernel driver core subsystem:device name
+--
+newFromDeviceId :: UDev -> ByteString -> IO Device
+newFromDeviceId udev devId = do
+  useAsCString devId $ \ c_devId ->
+    c_newFromDeviceId udev c_devId
+
+foreign import ccall unsafe "udev_device_new_from_environment"
   c_newFromEnvironment :: UDev -> IO Device
 
 -- | Create new udev device, and fill in information from the current
