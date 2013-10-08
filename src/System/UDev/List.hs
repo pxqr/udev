@@ -23,6 +23,7 @@ import Foreign
 import Foreign.C.String
 import Foreign.C.Types
 
+-- TODO fantom type
 
 -- | Opaque object representing one entry in a list. An entry contains
 -- contains a name, and optionally a value.

@@ -24,12 +24,17 @@ module System.UDev.Device
        , getParentWithSubsystemDevtype
 
          -- * Query
-       , getDevnode
+       , getDevpath
        , getSubsystem
        , getDevtype
        , getSyspath
        , getSysname
        , getSysnum
+       , getDevnode
+       , isInitialized
+       , getDevlinksListEntry
+       , getPropertiesListEntry
+       , getTagsListEntry
        , getDevnum
        , getAction
        , getSysattrValue
@@ -42,6 +47,7 @@ import Foreign.C
 import System.IO.Unsafe
 
 import System.UDev.Context
+import System.UDev.List
 import System.UDev.Types
 
 
@@ -161,6 +167,13 @@ getParentWithSubsystemDevtype udev subsystem devtype = do
                   c_getParentWithSubsystemDevtype udev c_subsystem c_devtype
   return $ if getDevice mdev == nullPtr then Nothing else Just mdev
 
+foreign import ccall unsafe "udev_device_get_devpath"
+  c_getDevpath :: Device -> IO CString
+
+-- TODO use RawFilePath
+getDevpath :: Device -> IO ByteString
+getDevpath dev = packCString =<< c_getDevpath dev
+
 foreign import ccall unsafe "udev_device_get_subsystem"
   c_getSubsystem :: Device -> IO CString
 
@@ -203,6 +216,57 @@ foreign import ccall unsafe "udev_device_get_devnode"
 
 getDevnode :: Device -> Maybe ByteString
 getDevnode udev = unsafePerformIO $ packCStringMaybe =<< c_getDevnode udev
+
+foreign import ccall unsafe "udev_device_get_is_initialized"
+  c_isInitialized :: Device -> IO CInt
+
+-- | Check if udev has already handled the device and has set up
+-- device node permissions and context, or has renamed a network
+-- device.
+--
+-- This is only implemented for devices with a device node or network
+-- interfaces. All other devices return 1 here.
+--
+isInitialized :: Device -> IO Bool
+isInitialized dev = (< 0) <$> c_isInitialized dev
+
+foreign import ccall unsafe "udev_device_get_devlinks_list_entry"
+  c_getDevlinksListEntry :: Device -> IO List
+
+-- | Retrieve the list of device links pointing to the device file of
+-- the udev device. The next list entry can be retrieved with
+-- 'getNext', which returns 'Nothing' if no more entries exist. The
+-- devlink path can be retrieved from the list entry by 'getName'. The
+-- path is an absolute path, and starts with the device directory.
+--
+getDevlinksListEntry :: Device -> IO List
+getDevlinksListEntry = c_getDevlinksListEntry
+{-# INLINE getDevlinksListEntry #-}
+
+foreign import ccall unsafe "udev_device_get_properties_list_entry"
+  c_getPropertiesListEntry :: Device -> IO List
+
+-- | Retrieve the list of key/value device properties of the udev
+-- device. The next list entry can be retrieved with 'getNext', which
+-- returns 'Nothing' if no more entries exist. The property name can
+-- be retrieved from the list entry by 'getName', the property value
+-- by 'getValue'.
+--
+getPropertiesListEntry :: Device -> IO List
+getPropertiesListEntry = c_getPropertiesListEntry
+{-# INLINE getPropertiesListEntry #-}
+
+foreign import ccall unsafe "udev_device_get_tags_list_entry"
+  c_getTagsListEntry :: Device -> IO List
+
+-- | Retrieve the list of tags attached to the udev device. The next
+-- list entry can be retrieved with 'getNext', which returns 'Nothing'
+-- if no more entries exist. The tag string can be retrieved from the
+-- list entry by 'getName'.
+--
+getTagsListEntry :: Device -> IO List
+getTagsListEntry = c_getTagsListEntry
+{-# INLINE getTagsListEntry #-}
 
 foreign import ccall unsafe "udev_device_get_devnum"
   c_getDevnum :: Device -> IO Devnum
