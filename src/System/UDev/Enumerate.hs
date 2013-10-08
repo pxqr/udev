@@ -19,10 +19,12 @@ module System.UDev.Enumerate
        , addNoMatchSubsystem
        , addMatchSysattr
        , addNoMatchSysattr
-         -- TODO
+       , addMatchProperty
+       , addMatchTag
+       , addMatchParent
        , addMatchIsInitialized
        , addMatchSysname
-         -- TODO
+       , addSyspath
 
          -- * Scan
        , scanDevices
@@ -39,6 +41,7 @@ import Foreign.C.String
 import Foreign.C.Types
 
 import System.UDev.Context
+import System.UDev.Device
 import System.UDev.List
 import System.UDev.Types
 
@@ -112,7 +115,7 @@ foreign import ccall unsafe  "udev_enumerate_add_nomatch_sysattr"
   c_addNoMatchSysattr :: Enumerate -> CString -> CString -> IO CInt
 
 -- | Match only devices not having a certain /sys device attribute.
-addNoMatchSysattr :: Enumerate
+addNoMatchSysattr :: Enumerate  -- ^ context
                   -> ByteString -- ^ filter for a sys attribute at the
                                 -- device to exclude from the list
                   -> Maybe ByteString -- ^ optional value of the sys
@@ -126,6 +129,49 @@ addNoMatchSysattr enumerate sysattr mvalue = do
         Just value -> do
           useAsCString value $ \ c_value -> do
             c_addNoMatchSysattr enumerate c_sysattr c_value
+
+foreign import ccall unsafe "udev_enumerate_add_match_property"
+  c_addMatchProperty :: Enumerate -> CString -> CString -> IO CInt
+
+-- | Match only devices with a certain property.
+addMatchProperty :: Enumerate  -- ^ context
+                 -> ByteString -- ^ filter for a property of the
+                               -- device to include in the list
+                 -> ByteString -- ^ value of the property
+                 -> IO ()
+addMatchProperty enumerate prop value = do
+  throwErrnoIf_ (< 0) "addMatchProperty" $ do
+    useAsCString prop $ \ c_prop -> do
+      useAsCString value $ \ c_value -> do
+        c_addMatchProperty enumerate c_prop c_value
+
+foreign import ccall unsafe "udev_enumerate_add_match_tag"
+  c_addMatchTag :: Enumerate -> CString -> IO CInt
+
+addMatchTag :: Enumerate  -- ^ context
+            -> ByteString -- ^ filter for a tag of the device to
+                          -- include in the list
+            -> IO ()
+addMatchTag enumerate tag = do
+  throwErrnoIf_ (< 0) "addMatchTag" $ do
+    useAsCString tag $ \ c_tag -> do
+      c_addMatchTag enumerate c_tag
+
+foreign import ccall unsafe "udev_enumerate_add_match_parent"
+  c_addMatchParent :: Enumerate -> Device -> IO CInt
+
+-- | Return the devices on the subtree of one given device. The parent
+-- itself is included in the list.
+--
+-- A reference for the device is held until the udev_enumerate context
+-- is cleaned up.
+--
+addMatchParent :: Enumerate -- ^ context
+               -> Device    -- ^ parent device where to start searching
+               -> IO ()     -- ^ can throw exception
+addMatchParent enumerate dev = do
+  throwErrnoIf_ (< 0) "addMatchParent" $ do
+    c_addMatchParent enumerate dev
 
 foreign import ccall unsafe "udev_enumerate_add_match_is_initialized"
   c_addMatchIsInitialized :: Enumerate -> IO CInt
@@ -145,6 +191,20 @@ addMatchSysname enumerate sysName = do
   throwErrnoIfMinus1_ "addMatchSysname" $ do
     useAsCString sysName $
       c_addMatchSysname enumerate
+
+foreign import ccall unsafe "udev_enumerate_add_syspath"
+  c_addSyspath :: Enumerate -> CString -> IO CInt
+
+-- | Add a device to the list of devices, to retrieve it back sorted
+-- in dependency order.
+--
+addSyspath :: Enumerate  -- ^ context
+           -> ByteString -- ^ path of a device
+           -> IO ()      -- ^ can throw exception
+addSyspath enumerate syspath = do
+  throwErrnoIf_ (< 0) "addSyspath" $ do
+    useAsCString syspath $ \ c_syspath -> do
+      c_addSyspath enumerate c_syspath
 
 foreign import ccall unsafe "udev_enumerate_scan_devices"
   c_scanDevices :: Enumerate -> IO CInt
