@@ -45,24 +45,6 @@ import System.UDev.Device
 import System.UDev.List
 import System.UDev.Types
 
--- | Opaque object representing one device lookup/sort context.
-newtype Enumerate = Enumerate (Ptr Enumerate)
-
-foreign import ccall unsafe "udev_enumerate_ref"
-  c_ref :: Enumerate -> IO Enumerate
-
-foreign import ccall unsafe "udev_enumerate_unref"
-  c_unref :: Enumerate -> IO Enumerate
-
-instance Ref Enumerate where
-  ref   = c_ref
-  unref = c_unref
-
-foreign import ccall unsafe "udev_enumerate_get_udev"
-  c_getUDev :: Enumerate -> UDev
-
-instance UDevChild Enumerate where
-  getUDev = c_getUDev
 
 foreign import ccall unsafe "udev_enumerate_new"
   c_new :: UDev -> IO Enumerate

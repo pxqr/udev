@@ -14,26 +14,12 @@ module System.UDev.HWDB
        ) where
 
 import Data.ByteString as BS
-import Foreign
 import Foreign.C
 
 import System.UDev.Context
 import System.UDev.List
 import System.UDev.Types
 
-
--- | Opaque object representing the hardware database.
-newtype HWDB = HWDB (Ptr HWDB)
-
-foreign import ccall unsafe "udev_hwdb_ref"
-  c_ref :: HWDB -> IO HWDB
-
-foreign import ccall unsafe "udev_hwdb_unref"
-  c_unref :: HWDB -> IO HWDB
-
-instance Ref HWDB where
-  ref   = c_ref
-  unref = c_unref
 
 foreign import ccall unsafe "udev_hwdb_new"
   c_new :: UDev -> IO HWDB

@@ -19,7 +19,6 @@ module System.UDev.List
 
 import Control.Monad
 import Data.ByteString
-import Foreign
 import Foreign.C.String
 import Foreign.C.Types
 

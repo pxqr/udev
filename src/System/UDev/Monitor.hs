@@ -53,8 +53,8 @@ newtype Monitor = Monitor { getMonitor :: Ptr Monitor }
 foreign import ccall unsafe "udev_monitor_get_udev"
   c_getUDev :: Monitor -> UDev
 
---instance UDevChild UDev where
---  getUDev = c_getUDev
+instance UDevChild Monitor where
+  getUDev = c_getUDev
 
 foreign import ccall unsafe "udev_monitor_ref"
   c_ref :: Monitor -> IO Monitor

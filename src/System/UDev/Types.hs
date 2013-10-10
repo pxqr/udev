@@ -13,6 +13,8 @@ module System.UDev.Types
 
        , UDev   (..)
        , Device (..)
+       , Enumerate (..)
+       , HWDB   (..)
        , List   (..), nil
        , Queue  (..)
        ) where
@@ -73,6 +75,46 @@ foreign import ccall unsafe "udev_device_get_udev"
 
 instance UDevChild Device where
   getUDev = c_getUDev
+
+{-----------------------------------------------------------------------
+--  Enumerate
+-----------------------------------------------------------------------}
+
+-- | Opaque object representing one device lookup/sort context.
+newtype Enumerate = Enumerate (Ptr Enumerate)
+
+foreign import ccall unsafe "udev_enumerate_ref"
+  c_EnumerateRef :: Enumerate -> IO Enumerate
+
+foreign import ccall unsafe "udev_enumerate_unref"
+  c_EnumerateUnref :: Enumerate -> IO Enumerate
+
+instance Ref Enumerate where
+  ref   = c_EnumerateRef
+  unref = c_EnumerateUnref
+
+foreign import ccall unsafe "udev_enumerate_get_udev"
+  c_EnumerateGetUDev :: Enumerate -> UDev
+
+instance UDevChild Enumerate where
+  getUDev = c_EnumerateGetUDev
+
+{-----------------------------------------------------------------------
+--  HWDB
+-----------------------------------------------------------------------}
+
+-- | Opaque object representing the hardware database.
+newtype HWDB = HWDB (Ptr HWDB)
+
+foreign import ccall unsafe "udev_hwdb_ref"
+  c_HWDBRef :: HWDB -> IO HWDB
+
+foreign import ccall unsafe "udev_hwdb_unref"
+  c_HWDBUnref :: HWDB -> IO HWDB
+
+instance Ref HWDB where
+  ref   = c_HWDBRef
+  unref = c_HWDBUnref
 
 {-----------------------------------------------------------------------
 --  List
