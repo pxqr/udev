@@ -26,27 +26,12 @@ module System.UDev.Queue
        ) where
 
 import Control.Applicative
-import Foreign
 import Foreign.C
 
 import System.UDev.Context
 import System.UDev.List
 import System.UDev.Types
 
-
--- | Opaque object representing the current event queue in the udev
--- daemon.
-newtype Queue = Queue { getQueue :: Ptr Queue }
-
-foreign import ccall unsafe "udev_queue_ref"
-  c_ref :: Queue -> IO Queue
-
-foreign import ccall unsafe "udev_queue_unref"
-  c_unref :: Queue -> IO Queue
-
-instance Ref Queue where
-  ref   = c_ref
-  unref = c_unref
 
 foreign import ccall unsafe "udev_queue_new"
   c_newQueue :: UDev -> IO Queue

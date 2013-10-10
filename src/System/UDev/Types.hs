@@ -14,6 +14,7 @@ module System.UDev.Types
        , UDev   (..)
        , Device (..)
        , List   (..), nil
+       , Queue  (..)
        ) where
 
 import Foreign
@@ -88,3 +89,20 @@ newtype List = List (Ptr List)
 nil :: List
 nil = List nullPtr
 
+{-----------------------------------------------------------------------
+--  Queue
+-----------------------------------------------------------------------}
+
+-- | Opaque object representing the current event queue in the udev
+-- daemon.
+newtype Queue = Queue { getQueue :: Ptr Queue }
+
+foreign import ccall unsafe "udev_queue_ref"
+  c_queueRef :: Queue -> IO Queue
+
+foreign import ccall unsafe "udev_queue_unref"
+  c_queueUnref :: Queue -> IO Queue
+
+instance Ref Queue where
+  ref   = c_queueRef
+  unref = c_queueUnref
