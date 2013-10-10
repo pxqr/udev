@@ -12,7 +12,7 @@
 {-# LANGUAGE OverloadedStrings        #-}
 module System.UDev.Context
        ( -- * Context
-         UDev (..) -- TODO hide constructor from API
+         UDev
        , UDevChild (..)
        , newUDev
        , withUDev
@@ -41,25 +41,6 @@ import Unsafe.Coerce
 import System.UDev.Types
 
 
--- | Opaque object representing the library context.
-newtype UDev = UDev (Ptr UDev)
-
-class UDevChild a where
-  getUDev :: a -> UDev
-
-instance UDevChild UDev where
-  getUDev = id
-
-foreign import ccall unsafe "udev_ref"
-  c_ref :: UDev -> IO UDev
-
-foreign import ccall unsafe "udev_unref"
-  c_unref :: UDev -> IO UDev
-
-instance Ref UDev where
-  ref   = c_ref
-  unref = c_unref
-
 foreign import ccall unsafe "udev_new"
   c_new :: IO UDev
 
@@ -70,7 +51,7 @@ newUDev :: IO UDev
 newUDev = c_new
 
 withUDev :: (UDev -> IO a) -> IO a
-withUDev = bracket c_new c_unref
+withUDev = bracket c_new unref
 
 {-----------------------------------------------------------------------
 --  Logging
