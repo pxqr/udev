@@ -11,7 +11,7 @@
 -- subsystem, and have a unique name inside that subsystem.
 --
 module System.UDev.Device
-       ( Device (..)
+       ( Device
        , Devnum
 
          -- * Create
@@ -62,26 +62,6 @@ import System.UDev.Context
 import System.UDev.List
 import System.UDev.Types
 
-
-
--- | Opaque object representing one kernel sys device.
-newtype Device = Device { getDevice :: Ptr Device }
-
-foreign import ccall unsafe "udev_device_ref"
-  c_deviceRef :: Device -> IO Device
-
-foreign import ccall unsafe "udev_device_unref"
-  c_deviceUnref :: Device -> IO Device
-
-instance Ref Device where
-  ref   = c_deviceRef
-  unref = c_deviceUnref
-
-foreign import ccall unsafe "udev_device_get_udev"
-  c_getUDev :: Device -> UDev
-
-instance UDevChild Device where
-  getUDev = c_getUDev
 
 foreign import ccall unsafe "udev_device_new_from_syspath"
   c_newFromSysPath :: UDev -> CString -> IO Device
