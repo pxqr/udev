@@ -13,6 +13,7 @@ module System.UDev.Types
 
        , UDev   (..)
        , Device (..)
+       , List   (..), nil
        ) where
 
 import Foreign
@@ -71,3 +72,19 @@ foreign import ccall unsafe "udev_device_get_udev"
 
 instance UDevChild Device where
   getUDev = c_getUDev
+
+{-----------------------------------------------------------------------
+--  List
+-----------------------------------------------------------------------}
+
+-- TODO newtype List name value
+
+-- | Opaque object representing one entry in a list. An entry contains
+-- contains a name, and optionally a value.
+--
+newtype List = List (Ptr List)
+               deriving Eq
+
+nil :: List
+nil = List nullPtr
+

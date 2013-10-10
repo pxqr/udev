@@ -8,7 +8,7 @@
 --   Libudev list operations.
 --
 module System.UDev.List
-       ( List (..)
+       ( List
 
        , getNext
        , getByName
@@ -23,16 +23,8 @@ import Foreign
 import Foreign.C.String
 import Foreign.C.Types
 
--- TODO newtype List name value
+import System.UDev.Types
 
--- | Opaque object representing one entry in a list. An entry contains
--- contains a name, and optionally a value.
---
-newtype List = List (Ptr List)
-               deriving Eq
-
-nil :: List
-nil = List nullPtr
 
 foreign import ccall unsafe "udev_list_entry_get_next"
   c_getNext :: List -> IO List
