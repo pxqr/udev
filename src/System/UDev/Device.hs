@@ -101,7 +101,7 @@ foreign import ccall unsafe "udev_device_new_from_subsystem_sysname"
   c_newFromSubsystemSysname :: UDev -> CString -> CString -> IO Device
 
 -- | The device is looked up by the subsystem and name string of the
--- device, like "mem" / "zero", or "block" / "sda".
+-- device, like \"mem\" \/ \"zero\", or \"block\" \/ \"sda\".
 --
 newFromSubsystemSysname :: UDev -> ByteString -> ByteString -> IO Device
 newFromSubsystemSysname udev subsystem sysname = do
@@ -112,9 +112,15 @@ newFromSubsystemSysname udev subsystem sysname = do
 foreign import ccall unsafe "udev_device_new_from_device_id"
   c_newFromDeviceId :: UDev -> CString -> IO Device
 
--- | The device is looked-up by a special string: b8:2 - block device
--- major:minor c128:1 - char device major:minor n3 - network device
--- ifindex +sound:card29 - kernel driver core subsystem:device name
+-- | The device is looked-up by a special string:
+--
+--     * b8:2 - block device major:minor
+--
+--     * c128:1 - char device major:minor
+--
+--     * n3 - network device ifindex
+--
+--     * +sound:card29 - kernel driver core subsystem:device name
 --
 newFromDeviceId :: UDev -> ByteString -> IO Device
 newFromDeviceId udev devId = do
@@ -127,7 +133,7 @@ foreign import ccall unsafe "udev_device_new_from_environment"
 -- | Create new udev device, and fill in information from the current
 -- process environment. This only works reliable if the process is
 -- called from a udev rule. It is usually used for tools executed from
--- IMPORT= rules.
+-- @IMPORT=@ rules.
 --
 newFromEnvironment :: UDev -> IO Device
 newFromEnvironment = c_newFromEnvironment
@@ -135,7 +141,7 @@ newFromEnvironment = c_newFromEnvironment
 foreign import ccall unsafe "udev_device_get_parent"
   c_getParent :: Device -> IO Device
 
--- | TODO: [MEM]: The returned the device is not referenced. It is
+--  TODO: [MEM]: The returned the device is not referenced. It is
 -- attached to the child device, and will be cleaned up when the child
 -- device is cleaned up.
 
@@ -165,8 +171,12 @@ foreign import ccall unsafe "udev_device_get_devpath"
 
 -- TODO use RawFilePath
 
+{-----------------------------------------------------------------------
+--  Query
+-----------------------------------------------------------------------}
+
 -- | Retrieve the kernel devpath value of the udev device. The path
--- does not contain the sys mount point, and starts with a '/'.
+-- does not contain the sys mount point, and starts with a \'/\'.
 --
 getDevpath :: Device -> IO ByteString
 getDevpath dev = packCString =<< c_getDevpath dev
@@ -181,7 +191,7 @@ packCStringMaybe cstring =
   else Just <$> packCString cstring
 
 -- | Retrieve the subsystem string of the udev device. The string does
--- not contain any "/".
+-- not contain any \"/\".
 --
 getSubsystem :: Device -> Maybe ByteString
 getSubsystem dev = unsafePerformIO $ packCStringMaybe =<< c_getSubsystem dev
@@ -212,7 +222,7 @@ getSysname dev = unsafePerformIO $ packCString =<< c_getSysname dev
 foreign import ccall unsafe "udev_device_get_sysnum"
   c_getSysnum :: Device -> IO CString
 
--- | TODO :: Device -> Maybe Int ?
+--  TODO :: Device -> Maybe Int ?
 
 -- | Get the instance number of the device.
 getSysnum :: Device -> Maybe ByteString
