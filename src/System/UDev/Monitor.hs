@@ -69,15 +69,24 @@ instance Ref Monitor where
 foreign import ccall unsafe "udev_monitor_new_from_netlink"
   c_newFromNetlink :: UDev -> CString -> IO Monitor
 
+-- | Event source identifier.
 newtype SourceId = SourceId ByteString
+
+-- | Events are sent out just after kernel processes them.
+--
+--  Applications should usually not connect directly to the "kernel"
+-- events, because the devices might not be useable at that time,
+-- before udev has configured them, and created device nodes. Use
+-- 'kernelId' instead.
+--
+kernelId :: SourceId
+kernelId = SourceId "kernel"
 
 -- | Events are sent out after udev has finished its event processing,
 -- all rules have been processed, and needed device nodes are created.
 udevId :: SourceId
 udevId = SourceId "udev"
 
-kernelId :: SourceId
-kernelId = SourceId "kernel"
 
 -- | Create new udev monitor and connect to a specified event source.
 newFromNetlink :: UDev -> SourceId -> IO Monitor

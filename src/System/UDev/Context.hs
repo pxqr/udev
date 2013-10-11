@@ -19,6 +19,7 @@ module System.UDev.Context
 
          -- * Logging
        , Priority (..)
+       , Logger
        , getLogPriority
        , setLogPriority
        , setLogger
@@ -50,6 +51,7 @@ foreign import ccall unsafe "udev_new"
 newUDev :: IO UDev
 newUDev = c_new
 
+-- | Like 'newUDev' but context will be released at exit.
 withUDev :: (UDev -> IO a) -> IO a
 withUDev = bracket c_new unref
 
@@ -57,16 +59,19 @@ withUDev = bracket c_new unref
 --  Logging
 -----------------------------------------------------------------------}
 
+-- | Log message priority.
 data Priority = LogError -- ^ error conditions
               | LogInfo  -- ^ informational
               | LogDebug -- ^ debug-level messages
                 deriving (Show, Read, Eq, Ord, Enum, Bounded)
 
+-- | Convert priority to priority code.
 prioToNr :: Priority -> CInt
 prioToNr LogError = 3
 prioToNr LogInfo  = 6
 prioToNr LogDebug = 7
 
+-- | Convert priority code to priority.
 nrToPrio :: CInt -> IO Priority
 nrToPrio 3 = pure LogError
 nrToPrio 6 = pure LogInfo
@@ -92,6 +97,8 @@ setLogPriority :: UDev -> Priority -> IO ()
 setLogPriority udev prio = c_setLogPriority udev (prioToNr prio)
 
 type CLogger = UDev -> CInt -> CString -> CInt -> CString -> CString -> IO ()
+
+-- | Logger function will called by udev on events.
 type Logger  = UDev -> Priority -> ByteString -> Int -> ByteString -> ByteString
             -> IO ()
 
@@ -115,7 +122,8 @@ foreign import ccall "udev_set_log_fn"
 setLogger :: UDev -> Logger -> IO ()
 setLogger udev logger = c_setLogger udev =<< mkLogger (marshLogger logger)
 
-
+-- | Default logger will just print "%PRIO %FILE:%LINE:%FN:%FORMAT:"
+-- to stdout.
 defaultLogger :: UDev -> Priority   -> ByteString
               -> Int  -> ByteString -> ByteString
               -> IO ()

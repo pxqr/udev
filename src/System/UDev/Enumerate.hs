@@ -15,10 +15,15 @@ module System.UDev.Enumerate
        , newEnumerate
 
          -- * Match
+       , Subsystem
        , addMatchSubsystem
        , addNoMatchSubsystem
+
+       , SysAttr
+       , SysValue
        , addMatchSysattr
        , addNoMatchSysattr
+
        , addMatchProperty
        , addMatchTag
        , addMatchParent
@@ -61,6 +66,7 @@ newEnumerate = c_new
 foreign import ccall unsafe "udev_enumerate_add_match_subsystem"
   c_addMatchSubsystem :: Enumerate -> CString -> IO CInt
 
+-- | Kernel subsystem string.
 type Subsystem = ByteString
 
 -- | Match only devices belonging to a certain kernel subsystem.
@@ -86,7 +92,11 @@ addNoMatchSubsystem enumerate subsystem = do
     useAsCString subsystem $
       c_addNoMatchSubsystem enumerate
 
+-- | \/sys attribute string.
 type SysAttr  = ByteString
+
+-- | Attribute specific \/sys value string. Can be an int or
+-- identifier depending on attribute.
 type SysValue = ByteString
 
 foreign import ccall unsafe "udev_enumerate_add_match_sysattr"
@@ -144,6 +154,8 @@ addMatchProperty enumerate prop value = do
 foreign import ccall unsafe "udev_enumerate_add_match_tag"
   c_addMatchTag :: Enumerate -> CString -> IO CInt
 
+
+-- | Match only devices with a certain tag.
 addMatchTag :: Enumerate  -- ^ context
             -> ByteString -- ^ filter for a tag of the device to
                           -- include in the list

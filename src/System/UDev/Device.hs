@@ -84,6 +84,7 @@ type Dev_t = CULong
 foreign import ccall unsafe "udev_device_new_from_devnum"
   c_newFromDevnum :: UDev -> CChar -> Dev_t -> IO Device
 
+-- | Device number.
 type Devnum = Int
 
 -- | Create new udev device, and fill in information from the sys
@@ -300,6 +301,7 @@ getDriver dev = packCString =<< c_getDriver dev
 foreign import ccall unsafe "udev_device_get_devnum"
   c_getDevnum :: Device -> IO Devnum
 
+-- | Get the device major/minor number.
 getDevnum :: Device -> IO Devnum
 getDevnum = c_getDevnum
 {-# INLINE getDevnum #-}

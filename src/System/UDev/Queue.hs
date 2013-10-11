@@ -60,6 +60,7 @@ isEmpty queue = (0 <) <$> c_isEmpty queue
 foreign import ccall unsafe "udev_queue_get_seqnum_is_finished"
   c_isFinished :: Queue -> CULLong -> IO CInt
 
+-- | Sequence number of event.
 type Seqnum = Int
 
 -- | Check if udev is currently processing a given sequence number.

@@ -28,7 +28,6 @@ import System.UDev.Queue
 import System.UDev.Util
 
 
-type Subsystem = ()
 type Devtype   = ()
 type Tag       = ()
 

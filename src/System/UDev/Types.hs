@@ -29,7 +29,9 @@ class Ref a where
   ref   :: a -> IO a
   unref :: a -> IO a
 
+-- | Family of udev resources.
 class UDevChild a where
+  -- | Get the context a resource belong to.
   getUDev :: a -> UDev
 
 {-----------------------------------------------------------------------
