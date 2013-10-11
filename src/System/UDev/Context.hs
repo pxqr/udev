@@ -122,7 +122,7 @@ foreign import ccall "udev_set_log_fn"
 setLogger :: UDev -> Logger -> IO ()
 setLogger udev logger = c_setLogger udev =<< mkLogger (marshLogger logger)
 
--- | Default logger will just print "%PRIO %FILE:%LINE:%FN:%FORMAT:"
+-- | Default logger will just print @%PRIO %FILE:%LINE:%FN:%FORMAT@
 -- to stdout.
 defaultLogger :: UDev -> Priority   -> ByteString
               -> Int  -> ByteString -> ByteString
