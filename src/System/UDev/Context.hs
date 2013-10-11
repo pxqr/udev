@@ -99,7 +99,12 @@ setLogPriority udev prio = c_setLogPriority udev (prioToNr prio)
 type CLogger = UDev -> CInt -> CString -> CInt -> CString -> CString -> IO ()
 
 -- | Logger function will called by udev on events.
-type Logger  = UDev -> Priority -> ByteString -> Int -> ByteString -> ByteString
+type Logger  = UDev
+            -> Priority   -- ^ message priority;
+            -> ByteString -- ^ position: file
+            -> Int        -- ^ position: line
+            -> ByteString -- ^ position: function
+            -> ByteString -- ^ message body
             -> IO ()
 
 marshLogger :: Logger -> CLogger
@@ -122,7 +127,7 @@ foreign import ccall "udev_set_log_fn"
 setLogger :: UDev -> Logger -> IO ()
 setLogger udev logger = c_setLogger udev =<< mkLogger (marshLogger logger)
 
--- | Default logger will just print @%PRIO %FILE:%LINE:%FN:%FORMAT@
+-- | Default logger will just print @%PRIO %FILE:%LINE:\n%FN: %FORMAT@
 -- to stdout.
 defaultLogger :: UDev -> Priority   -> ByteString
               -> Int  -> ByteString -> ByteString
@@ -130,8 +135,8 @@ defaultLogger :: UDev -> Priority   -> ByteString
 defaultLogger _ priority file line fn format = do
   BC.putStrLn $ BS.concat
     [ BC.pack (show priority), " "
-    , file, ":", BC.pack (show line), ":", fn, ": "
-    , format
+    , file, ":", BC.pack (show line), ":\n"
+    , "  ", fn, ": ", format
     ]
 
 {-----------------------------------------------------------------------
