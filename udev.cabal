@@ -1,5 +1,5 @@
 name:                udev
-version:             0.0.0.0
+version:             0.1.0.0
 license:             BSD3
 license-file:        LICENSE
 author:              Sam Truzjan
@@ -27,7 +27,7 @@ source-repository this
   type:                git
   location:            git://github.com/pxqr/udev.git
   branch:              master
-  tag:                 v0.0.0.0
+  tag:                 v0.1.0.0
 
 flag examples
   description:         whether to build examples
