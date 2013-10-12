@@ -104,7 +104,7 @@ newFromNetlink udev sid =
 foreign import ccall unsafe "udev_monitor_enable_receiving"
   c_enableReceiving :: Monitor -> IO CInt
 
--- | Binds the udev_monitor socket to the event source.
+-- | Binds the 'Monitor' socket to the event source.
 enableReceiving :: Monitor -> IO ()
 enableReceiving monitor = do
   throwErrnoIfMinus1_ "enableReceiving" $ do
@@ -126,7 +126,8 @@ foreign import ccall unsafe "udev_monitor_get_fd"
 getFd :: Monitor -> IO Fd
 getFd monitor = Fd <$> c_getFd monitor
 
--- | Retrieve the socket handle associated with the monitor.
+-- | Similar to 'getFd' but retrieves the socket /handle/ associated
+-- with the monitor.
 getHandle :: Monitor -> IO Handle
 getHandle = getFd >=> fdToHandle
 
