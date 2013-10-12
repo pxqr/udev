@@ -29,7 +29,7 @@ main = do
   withUDev $ \ udev -> do
     setLogPriority udev LogDebug
     setLogger udev defaultLogger
-    monitor <- newFromNetlink udev udevId
+    monitor <- newFromNetlink udev UDevId
     enableReceiving monitor
     fd <- getFd monitor
     forever $ do
