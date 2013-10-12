@@ -10,7 +10,8 @@
 -- the kernel sys filesystem. Devices usually belong to a kernel
 -- subsystem, and have a unique name inside that subsystem.
 --
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 module System.UDev.Device
        ( Device
        , Devnum
@@ -336,15 +337,30 @@ getDevnum = nrToDevnum . c_getDevnum
 foreign import ccall unsafe "udev_device_get_action"
   c_getAction :: Device -> CString
 
--- TODO data Action
+data Action = Add
+            | Remove
+            | Change
+            | Online
+            | Offline
+            | Other ByteString
+              deriving (Show, Read, Eq, Ord)
+
+marshalAction :: ByteString -> Action
+marshalAction "add"     = Add
+marshalAction "remove"  = Remove
+marshalAction "change"  = Remove
+marshalAction "online"  = Online
+marshalAction "offline" = Offline
+marshalAction   action  = Other action
 
 -- | This is only valid if the device was received through a
 -- monitor. Devices read from sys do not have an action string.
 --
-getAction :: Device -> Maybe ByteString
+getAction :: Device -> Maybe Action
 getAction dev
     | c_action == nullPtr = Nothing
-    |      otherwise      = Just $ unsafePerformIO $ packCString c_action
+    |      otherwise      = Just $ unsafePerformIO $ do
+      marshalAction <$> packCString c_action
   where
     c_action = c_getAction dev
 
