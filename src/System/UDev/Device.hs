@@ -10,6 +10,7 @@
 -- the kernel sys filesystem. Devices usually belong to a kernel
 -- subsystem, and have a unique name inside that subsystem.
 --
+{-# LANGUAGE RecordWildCards #-}
 module System.UDev.Device
        ( Device
        , Devnum
@@ -53,6 +54,7 @@ module System.UDev.Device
        ) where
 
 import Control.Applicative
+import Data.Bits
 import Data.ByteString as BS
 import Foreign hiding (unsafePerformIO)
 import Foreign.C
@@ -85,7 +87,23 @@ foreign import ccall unsafe "udev_device_new_from_devnum"
   c_newFromDevnum :: UDev -> CChar -> Dev_t -> IO Device
 
 -- | Device number.
-type Devnum = Int
+data Devnum = Devnum
+  { major :: {-# UNPACK #-} !Int
+  , minor :: {-# UNPACK #-} !Int
+  } deriving (Show, Read, Eq, Ord)
+
+nrToDevnum :: Dev_t -> Devnum
+nrToDevnum x = Devnum
+  { major = fromIntegral ((x `unsafeShiftR` 8) .&. 0xff)
+  , minor = fromIntegral (x .&. 0xff)
+  }
+{-# INLINE nrToDevnum #-}
+
+devnumToNr :: Devnum -> Dev_t
+devnumToNr Devnum {..}
+    = fromIntegral (((major .&. 0xff) `unsafeShiftL` 8)
+                 .|. (minor .&. 0xff))
+{-# INLINE devnumToNr #-}
 
 -- | Create new udev device, and fill in information from the sys
 -- device and the udev database entry. The device is looked-up by its
@@ -94,7 +112,7 @@ type Devnum = Int
 --
 newFromDevnum :: UDev -> Char -> Devnum -> IO Device
 newFromDevnum udev char devnum
-  = c_newFromDevnum udev (toEnum (fromEnum char)) (fromIntegral devnum)
+  = c_newFromDevnum udev (toEnum (fromEnum char)) (devnumToNr devnum)
 {-# INLINE newFromDevnum #-}
 
 foreign import ccall unsafe "udev_device_new_from_subsystem_sysname"
@@ -309,11 +327,11 @@ getDriver :: Device -> IO ByteString
 getDriver dev = packCString =<< c_getDriver dev
 
 foreign import ccall unsafe "udev_device_get_devnum"
-  c_getDevnum :: Device -> IO Devnum
+  c_getDevnum :: Device -> Dev_t
 
 -- | Get the device major/minor number.
-getDevnum :: Device -> IO Devnum
-getDevnum = c_getDevnum
+getDevnum :: Device -> Devnum
+getDevnum = nrToDevnum . c_getDevnum
 {-# INLINE getDevnum #-}
 
 foreign import ccall unsafe "udev_device_get_action"

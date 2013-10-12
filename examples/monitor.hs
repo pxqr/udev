@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main (main) where
 
+import Prelude as P
+
 import Control.Monad
 import Data.ByteString.Char8 as BC
 
@@ -20,6 +22,7 @@ dumpDeviceInfo dev = do
   print $ getSysnum    dev
   print $ getDevnode    dev
   print $ getAction    dev
+  P.putStrLn $ "device number: " ++ show (getDevnum dev)
 
 main :: IO ()
 main = do
