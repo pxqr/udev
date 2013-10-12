@@ -195,8 +195,9 @@ foreign import ccall unsafe "udev_device_get_devpath"
 -- | Retrieve the kernel devpath value of the udev device. The path
 -- does not contain the sys mount point, and starts with a \'/\'.
 --
-getDevpath :: Device -> IO RawFilePath
-getDevpath dev = packCString =<< c_getDevpath dev
+getDevpath :: Device -> RawFilePath
+getDevpath dev = unsafePerformIO $ do
+  packCString =<< c_getDevpath dev
 
 foreign import ccall unsafe "udev_device_get_subsystem"
   c_getSubsystem :: Device -> IO CString
@@ -319,11 +320,10 @@ getPropertyValue dev prop = do
 foreign import ccall unsafe "udev_device_get_driver"
   c_getDriver :: Device -> IO CString
 
--- TODO ByteString -> Text ?
-
 -- | Get the kernel driver name.
-getDriver :: Device -> IO ByteString
-getDriver dev = packCString =<< c_getDriver dev
+getDriver :: Device -> ByteString
+getDriver dev = unsafePerformIO $ do
+  packCString =<< c_getDriver dev
 
 foreign import ccall unsafe "udev_device_get_devnum"
   c_getDevnum :: Device -> Dev_t
@@ -352,12 +352,14 @@ getAction dev
 foreign import ccall unsafe "udev_device_get_sysattr_value"
   c_getSysattrValue :: Device -> CString -> CString
 
+-- NOTE: getSysattrValue is not pure since we can alter some attr
+-- using setSysattrValue
+
 -- | The retrieved value is cached in the device. Repeated calls will
 -- return the same value and not open the attribute again.
 --
-getSysattrValue :: Device -> ByteString -> ByteString
+getSysattrValue :: Device -> ByteString -> IO ByteString
 getSysattrValue dev sysattr = do
-  unsafePerformIO $ do
     packCString =<< useAsCString sysattr (return . c_getSysattrValue dev)
 
 foreign import ccall unsafe "udev_device_set_sysattr_value"
