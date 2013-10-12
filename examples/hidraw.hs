@@ -25,11 +25,16 @@ main = do
     case mdev of
       Nothing   -> BC.putStrLn "unable to find parent usb device"
       Just pdev -> do
+        vid <- getSysattrValue pdev "idVendor"
+        pid <- getSysattrValue pdev "idProduct"
+        manifacturer <- getSysattrValue pdev "manufacturer"
+        productName  <- getSysattrValue pdev "product"
+
         BC.putStrLn $ BS.concat
-          [ "VID/PID: ", getSysattrValue pdev "idVendor" , " "
-                       , getSysattrValue pdev "idProduct", "\n"
-          , getSysattrValue pdev "manufacturer", "\n"
-          , getSysattrValue pdev "product"     , "\n"
+          [ "VID/PID: ", vid, " "
+                       , pid, "\n"
+          , manifacturer, "\n"
+          , productName , "\n"
 --          , "serial: ",  getSysattrValue pdev "serial"
           ]
     return ()
