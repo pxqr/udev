@@ -1,4 +1,4 @@
 * DONE hide all constructors
-* TODO use posix-paths package
+* DONE use posix-paths package
 * TODO auto resource management
 * TODO add high level API to System.UDev
