@@ -44,6 +44,7 @@ import Foreign
 import Foreign.C.Error
 import Foreign.C.String
 import Foreign.C.Types
+import System.Posix.FilePath
 
 import System.UDev.Context
 import System.UDev.Device
@@ -209,9 +210,9 @@ foreign import ccall unsafe "udev_enumerate_add_syspath"
 -- | Add a device to the list of devices, to retrieve it back sorted
 -- in dependency order.
 --
-addSyspath :: Enumerate  -- ^ context
-           -> ByteString -- ^ path of a device
-           -> IO ()      -- ^ can throw exception
+addSyspath :: Enumerate   -- ^ context
+           -> RawFilePath -- ^ path of a device
+           -> IO ()       -- ^ can throw exception
 addSyspath enumerate syspath = do
   throwErrnoIf_ (< 0) "addSyspath" $ do
     useAsCString syspath $ \ c_syspath -> do

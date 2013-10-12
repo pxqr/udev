@@ -51,6 +51,7 @@ library
   build-depends:       base == 4.*
                      , bytestring
                      , unix
+                     , posix-paths
   build-tools:         hsc2hs
   ghc-options:         -Wall
 

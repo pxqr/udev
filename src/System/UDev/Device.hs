@@ -59,6 +59,7 @@ import Data.ByteString as BS
 import Foreign hiding (unsafePerformIO)
 import Foreign.C
 import System.IO.Unsafe
+import System.Posix.FilePath
 
 import System.UDev.Context
 import System.UDev.List
@@ -68,14 +69,12 @@ import System.UDev.Types
 foreign import ccall unsafe "udev_device_new_from_syspath"
   c_newFromSysPath :: UDev -> CString -> IO Device
 
--- TODO type SysPath = FilePath
-type SysPath = ByteString
 
 -- | Create new udev device, and fill in information from the sys
 -- device and the udev database entry. The syspath is the absolute
 -- path to the device, including the sys mount point.
 --
-newFromSysPath :: UDev -> SysPath -> IO Device
+newFromSysPath :: UDev -> RawFilePath -> IO Device
 newFromSysPath udev sysPath = do
   Device <$> (throwErrnoIfNull "newFromSysPath" $ do
     useAsCString sysPath $ \ c_sysPath -> do
@@ -196,7 +195,7 @@ foreign import ccall unsafe "udev_device_get_devpath"
 -- | Retrieve the kernel devpath value of the udev device. The path
 -- does not contain the sys mount point, and starts with a \'/\'.
 --
-getDevpath :: Device -> IO ByteString
+getDevpath :: Device -> IO RawFilePath
 getDevpath dev = packCString =<< c_getDevpath dev
 
 foreign import ccall unsafe "udev_device_get_subsystem"
@@ -227,7 +226,7 @@ foreign import ccall unsafe "udev_device_get_syspath"
 -- | Retrieve the sys path of the udev device. The path is an absolute
 -- path and starts with the sys mount point.
 --
-getSyspath :: Device -> ByteString
+getSyspath :: Device -> RawFilePath
 getSyspath dev = unsafePerformIO $ packCString =<< c_getSyspath dev
 
 foreign import ccall unsafe "udev_device_get_sysname"
