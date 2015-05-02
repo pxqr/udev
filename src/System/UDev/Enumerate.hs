@@ -244,6 +244,8 @@ foreign import ccall unsafe "udev_enumerate_get_list_entry"
   c_getListEntry :: Enumerate -> IO List
 
 -- | Get the first entry of the sorted list of device paths.
-getListEntry :: Enumerate -> IO List
-getListEntry = c_getListEntry
+getListEntry :: Enumerate -> IO (Maybe List)
+getListEntry enumerate = do
+  xs <- c_getListEntry enumerate
+  return $ if xs == nil then Nothing else Just xs
 {-# INLINE getListEntry #-}
