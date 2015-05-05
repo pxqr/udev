@@ -16,7 +16,7 @@ main = do
     e <- newEnumerate udev
     addMatchSubsystem e "hidraw"
     scanDevices e
-    ls <- getListEntry e
+    Just ls <- getListEntry e
     path  <- getName ls
     print path
     dev <- newFromSysPath udev path
