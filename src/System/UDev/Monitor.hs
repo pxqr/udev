@@ -151,12 +151,16 @@ foreign import ccall unsafe "udev_monitor_filter_add_match_subsystem_devtype"
 -- The filter /must be/ installed before the monitor is switched to
 -- listening mode.
 --
-filterAddMatchSubsystemDevtype :: Monitor -> ByteString -> ByteString -> IO ()
-filterAddMatchSubsystemDevtype monitor subsystem devtype = do
+filterAddMatchSubsystemDevtype :: Monitor -> ByteString -> Maybe ByteString -> IO ()
+filterAddMatchSubsystemDevtype monitor subsystem mbDevtype = do
   throwErrnoIfMinus1_ "filterAddMatchSubsystemDevtype" $
     useAsCString subsystem $ \ c_subsystem ->
-      useAsCString devtype $ \ c_devtype   ->
-        c_filterAddMatchSubsystemDevtype monitor c_subsystem c_devtype
+      case mbDevtype of
+        Just devtype ->
+            useAsCString devtype $ \ c_devtype   ->
+              c_filterAddMatchSubsystemDevtype monitor c_subsystem c_devtype
+        Nothing ->
+              c_filterAddMatchSubsystemDevtype monitor c_subsystem nullPtr
 
 foreign import ccall unsafe "udev_monitor_filter_add_match_tag"
   c_filterAddMatchTag :: Monitor -> CString -> IO CInt
