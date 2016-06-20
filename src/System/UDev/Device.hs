@@ -15,6 +15,7 @@
 module System.UDev.Device
        ( Device
        , Devnum
+       , Action (..)
 
          -- * Create
        , newFromSysPath
