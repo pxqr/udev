@@ -77,9 +77,9 @@ foreign import ccall unsafe "udev_device_new_from_syspath"
 -- path to the device, including the sys mount point.
 --
 newFromSysPath :: UDev -> RawFilePath -> IO Device
-newFromSysPath udev sysPath = do
-  Device <$> (throwErrnoIfNull "newFromSysPath" $ do
-    useAsCString sysPath $ \ c_sysPath -> do
+newFromSysPath udev sysPath =
+  Device <$> throwErrnoIfNull "newFromSysPath"
+    (useAsCString sysPath $ \ c_sysPath ->
       getDevice <$> c_newFromSysPath udev c_sysPath)
 
 type Dev_t = CULong
@@ -123,7 +123,7 @@ foreign import ccall unsafe "udev_device_new_from_subsystem_sysname"
 -- device, like \"mem\" \/ \"zero\", or \"block\" \/ \"sda\".
 --
 newFromSubsystemSysname :: UDev -> ByteString -> ByteString -> IO Device
-newFromSubsystemSysname udev subsystem sysname = do
+newFromSubsystemSysname udev subsystem sysname =
   useAsCString subsystem $ \ c_subsystem ->
     useAsCString sysname $ \ c_sysname   ->
       c_newFromSubsystemSysname udev c_subsystem c_sysname
@@ -142,7 +142,7 @@ foreign import ccall unsafe "udev_device_new_from_device_id"
 --     * +sound:card29 - kernel driver core subsystem:device name
 --
 newFromDeviceId :: UDev -> ByteString -> IO Device
-newFromDeviceId udev devId = do
+newFromDeviceId udev devId =
   useAsCString devId $ \ c_devId ->
     c_newFromDeviceId udev c_devId
 
@@ -198,7 +198,7 @@ foreign import ccall unsafe "udev_device_get_devpath"
 -- does not contain the sys mount point, and starts with a \'/\'.
 --
 getDevpath :: Device -> RawFilePath
-getDevpath dev = unsafePerformIO $ do
+getDevpath dev = unsafePerformIO $
   packCString =<< c_getDevpath dev
 
 foreign import ccall unsafe "udev_device_get_subsystem"
@@ -324,7 +324,7 @@ foreign import ccall unsafe "udev_device_get_driver"
 
 -- | Get the kernel driver name.
 getDriver :: Device -> ByteString
-getDriver dev = unsafePerformIO $ do
+getDriver dev = unsafePerformIO $
   packCString =<< c_getDriver dev
 
 foreign import ccall unsafe "udev_device_get_devnum"
@@ -360,7 +360,7 @@ marshalAction   action  = Other action
 getAction :: Device -> Maybe Action
 getAction dev
     | c_action == nullPtr = Nothing
-    |      otherwise      = Just $ unsafePerformIO $ do
+    |      otherwise      = Just $ unsafePerformIO $
       marshalAction <$> packCString c_action
   where
     c_action = c_getAction dev
@@ -376,7 +376,7 @@ foreign import ccall unsafe "udev_device_get_sysattr_value"
 -- return the same value and not open the attribute again.
 --
 getSysattrValue :: Device -> ByteString -> IO ByteString
-getSysattrValue dev sysattr = do
+getSysattrValue dev sysattr =
     packCString =<< useAsCString sysattr (return . c_getSysattrValue dev)
 
 foreign import ccall unsafe "udev_device_set_sysattr_value"
@@ -389,8 +389,8 @@ setSysattrValue :: Device
                 -> ByteString -- ^ attribute name
                 -> ByteString -- ^ new value to be set
                 -> IO ()
-setSysattrValue dev sysattr value = do
-  throwErrnoIf_ (0 <) "setSysattrValue" $ do
+setSysattrValue dev sysattr value =
+  throwErrnoIf_ (0 <) "setSysattrValue" $
     useAsCString sysattr $ \ c_sysattr ->
       useAsCString value $ \ c_value   ->
         c_setSysattrValue dev c_sysattr c_value
@@ -439,7 +439,7 @@ foreign import ccall unsafe "udev_device_has_tag"
 
 -- | Check if a given device has a certain tag associated.
 hasTag :: Device -> ByteString -> IO Bool
-hasTag dev tag = do
-  (1 ==) <$> do
-    useAsCString tag $ \ c_tag ->
-      c_hasTag dev c_tag
+hasTag dev tag =
+  (1 ==) <$>
+    useAsCString tag (\ c_tag ->
+      c_hasTag dev c_tag)

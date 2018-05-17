@@ -82,7 +82,7 @@ sequenceIsFinished :: Queue   -- ^ udev queue context
                    -> Seqnum  -- ^ last event sequence number
                    -> IO Bool -- ^ if any of the sequence numbers in
                               -- the given range is currently active
-sequenceIsFinished queue start end = do
+sequenceIsFinished queue start end =
   (> 0) <$> c_sequenceIsFinished queue (fromIntegral start)
                                        (fromIntegral end)
 {-# INLINE sequenceIsFinished #-}

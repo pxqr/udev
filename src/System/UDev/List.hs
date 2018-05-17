@@ -20,10 +20,8 @@ module System.UDev.List
 import Control.Monad
 import Data.ByteString
 import Foreign.C.String
-import Foreign.C.Types
 
 import System.UDev.Types
-
 
 foreign import ccall unsafe "udev_list_entry_get_next"
   c_getNext :: List -> IO List

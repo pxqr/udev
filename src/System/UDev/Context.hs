@@ -130,7 +130,7 @@ setLogger udev logger = c_setLogger udev =<< mkLogger (marshLogger logger)
 -- | Default logger will just print @%PRIO %FILE:%LINE:\n%FN: %FORMAT@
 -- to stdout.
 defaultLogger :: Logger
-defaultLogger _ priority file line fn format = do
+defaultLogger _ priority file line fn format =
   BC.putStrLn $ BS.concat
     [ BC.pack (show priority), " "
     , file, ":", BC.pack (show line), ":\n"
