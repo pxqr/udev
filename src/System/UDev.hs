@@ -16,8 +16,6 @@ module System.UDev
        , module System.UDev.Util
        ) where
 
-import Data.Monoid
-
 import System.UDev.Context
 import System.UDev.Device
 import System.UDev.Enumerate
@@ -26,14 +24,3 @@ import System.UDev.List
 import System.UDev.Monitor
 import System.UDev.Queue
 import System.UDev.Util
-
-
-type Devtype   = ()
-type Tag       = ()
-
-data Filter = Filter (Maybe (Subsystem, Devtype)) (Maybe Tag)
-
-instance Monoid Filter where
-  mempty  = Filter Nothing Nothing
-  Filter sda ta `mappend` Filter sdb tb
-    = Filter (sda `mappend` sdb) (ta `mappend` tb)
