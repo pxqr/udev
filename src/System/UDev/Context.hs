@@ -15,6 +15,7 @@ module System.UDev.Context
          UDev
        , UDevChild (..)
        , newUDev
+       , freeUDev
        , withUDev
 
          -- * Logging
@@ -31,10 +32,11 @@ module System.UDev.Context
        ) where
 
 import Control.Applicative
+import Control.Monad (void)
 import Control.Exception
 import Data.ByteString as BS
 import Data.ByteString.Char8 as BC
-import Foreign
+import Foreign (Ptr, FunPtr)
 import Foreign.C.String
 import Foreign.C.Types
 import Unsafe.Coerce
@@ -51,9 +53,12 @@ foreign import ccall unsafe "udev_new"
 newUDev :: IO UDev
 newUDev = c_new
 
+freeUDev :: UDev -> IO ()
+freeUDev = void . unref
+
 -- | Like 'newUDev' but context will be released at exit.
 withUDev :: (UDev -> IO a) -> IO a
-withUDev = bracket c_new unref
+withUDev = bracket newUDev freeUDev
 
 {-----------------------------------------------------------------------
 --  Logging
