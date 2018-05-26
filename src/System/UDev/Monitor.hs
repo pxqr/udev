@@ -96,8 +96,8 @@ unmarshalSourceId (OtherId i) = i
 newFromNetlink :: UDev -> SourceId -> IO Monitor
 newFromNetlink udev sid =
   Monitor <$> do
-    throwErrnoIfNull "newFromNetlink" $ do
-      useAsCString (unmarshalSourceId sid) $ \ c_name -> do
+    throwErrnoIfNull "newFromNetlink" $
+      useAsCString (unmarshalSourceId sid) $ \ c_name ->
         getMonitor <$> c_newFromNetlink udev c_name
 
 
@@ -106,8 +106,8 @@ foreign import ccall unsafe "udev_monitor_enable_receiving"
 
 -- | Binds the 'Monitor' socket to the event source.
 enableReceiving :: Monitor -> IO ()
-enableReceiving monitor = do
-  throwErrnoIfMinus1_ "enableReceiving" $ do
+enableReceiving monitor =
+  throwErrnoIfMinus1_ "enableReceiving" $
     c_enableReceiving monitor
 
 foreign import ccall unsafe "udev_monitor_set_receive_buffer_size"
@@ -115,8 +115,8 @@ foreign import ccall unsafe "udev_monitor_set_receive_buffer_size"
 
 -- | Set the size of the kernel socket buffer.
 setReceiveBufferSize :: Monitor -> Int -> IO ()
-setReceiveBufferSize monitor size = do
-  throwErrnoIfMinus1_ "setReceiveBufferSize" $ do
+setReceiveBufferSize monitor size =
+  throwErrnoIfMinus1_ "setReceiveBufferSize" $
     c_setReceiveBufferSize monitor (fromIntegral size)
 
 foreign import ccall unsafe "udev_monitor_get_fd"
@@ -138,10 +138,10 @@ foreign import ccall unsafe "udev_monitor_receive_device"
 -- device, fill in the received data, and return the device.
 --
 receiveDevice :: Monitor -> IO Device
-receiveDevice monitor = do
-  Device <$> do
-    throwErrnoIfNull "receiveDevice" $ do
-      getDevice <$> c_receiveDevice monitor
+receiveDevice monitor =
+  Device <$>
+    throwErrnoIfNull "receiveDevice"
+      (getDevice <$> c_receiveDevice monitor)
 
 foreign import ccall unsafe "udev_monitor_filter_add_match_subsystem_devtype"
   c_filterAddMatchSubsystemDevtype :: Monitor -> CString -> CString -> IO CInt
@@ -152,7 +152,7 @@ foreign import ccall unsafe "udev_monitor_filter_add_match_subsystem_devtype"
 -- listening mode.
 --
 filterAddMatchSubsystemDevtype :: Monitor -> ByteString -> Maybe ByteString -> IO ()
-filterAddMatchSubsystemDevtype monitor subsystem mbDevtype = do
+filterAddMatchSubsystemDevtype monitor subsystem mbDevtype =
   throwErrnoIfMinus1_ "filterAddMatchSubsystemDevtype" $
     useAsCString subsystem $ \ c_subsystem ->
       case mbDevtype of
@@ -169,9 +169,9 @@ foreign import ccall unsafe "udev_monitor_filter_add_match_tag"
 -- listening mode.
 --
 filterAddMatchTag :: Monitor -> ByteString -> IO ()
-filterAddMatchTag monitor tag = do
-  throwErrnoIfMinus1_ "filterAddMatchTag" $ do
-    useAsCString tag $ \ c_tag -> do
+filterAddMatchTag monitor tag =
+  throwErrnoIfMinus1_ "filterAddMatchTag" $
+    useAsCString tag $ \ c_tag ->
       c_filterAddMatchTag monitor c_tag
 
 foreign import ccall unsafe "udev_monitor_filter_update"
@@ -181,8 +181,8 @@ foreign import ccall unsafe "udev_monitor_filter_update"
 -- filter was removed or changed.
 --
 filterUpdate :: Monitor -> IO ()
-filterUpdate monitor = do
-  throwErrnoIfMinus1_ "filterUpdate" $ do
+filterUpdate monitor =
+  throwErrnoIfMinus1_ "filterUpdate" $
     c_filterUpdate monitor
 
 
@@ -191,6 +191,6 @@ foreign import ccall unsafe "udev_monitor_filter_remove"
 
 -- | Remove all filters from monitor.
 filterRemove :: Monitor -> IO ()
-filterRemove monitor = do
-  throwErrnoIfMinus1_ "filterRemove" $ do
+filterRemove monitor =
+  throwErrnoIfMinus1_ "filterRemove" $
     c_filterRemove monitor
